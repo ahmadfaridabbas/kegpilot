@@ -6,3 +6,6 @@ src/build/
 
 # Local design-source inputs (raw icon/glyph masters) — kept off GitHub.
 assets-source/
+
+# Local app builds for manual testing — kept off GitHub.
+kegpilot-builds/
