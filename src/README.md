@@ -70,6 +70,10 @@ Suggested manual checks: open in both Light and Dark appearance; navigate action
 
 Official references: [Apple MenuBarExtra window style](https://developer.apple.com/documentation/swiftui/menubarextrastyle/window), [Homebrew command manual](https://docs.brew.sh/Manpage).
 
+## Version 2.2: KegPilot rebrand
+
+The app is rebranded from **BrewBar** to **KegPilot** with the tagline "Homebrew from your menu bar." This is a branding/identity release — no functional, Homebrew-command, or business-logic changes. What changed: the product name and tagline across the UI, website, SEO, and docs; the app bundle name (`KegPilot.app`, executable `KegPilot`); the source layout (`Sources/KegPilot/`, `KegPilot.xcodeproj`, `KegPilotApp.swift`); and new keg + terminal-`>_` app icons (light/dark, on rounded-rectangle plates) plus a matching monochrome keg menu-bar glyph (replacing the mug). The menu-bar update badge dot is now **red**. The GitHub repository moved to `ahmadfaridabbas/kegpilot`. For compatibility the bundle identifier stays `com.brewbar.app` and the `appearance` UserDefaults key is unchanged, so existing settings and permissions carry over; the production website URL remains `brewbar.netlify.app` for now. Also fixed a header layout issue so the full tagline and the Options/Close/Quit button labels no longer truncate. Optimized arm64 build verified; the built bundle reports version 2.2 (build 43); all test suites pass.
+
 ## Version 1.1 icons
 
 Includes a custom amber terminal-cup app icon with all macOS icon sizes, a matching template menu-bar icon that follows system appearance, and branded dashboard artwork. Editable AppKit vector source is in `Design/RenderIcons.swift`. To regenerate, run `swift Design/RenderIcons.swift` from the project folder, then `iconutil -c icns Resources/AppIcon.iconset -o Resources/AppIcon.icns`. Both the Xcode project and standalone build script bundle these resources.

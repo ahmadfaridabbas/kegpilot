@@ -161,7 +161,7 @@ func renderDashboard(width: CGFloat, height: CGFloat, theme t: Theme, tab: Tab,
     drawAppIcon(NSRect(x: pad, y: top - 54, width: 54, height: 54), t)
     text("KegPilot", NSPoint(x: pad + 66, y: top - 26), size: 22, color: t.ink, weight: .semibold, rounded: true)
     text("Homebrew from your menu bar.", NSPoint(x: pad + 66, y: top - 44), size: 13, color: t.muted)
-    text("Version 2.1 (42)", NSPoint(x: pad + 66, y: top - 58), size: 10, color: t.muted, weight: .medium)
+    text("Version 2.2 (43)", NSPoint(x: pad + 66, y: top - 58), size: 10, color: t.muted, weight: .medium)
 
     // Right-aligned controls: [•••]  [x Close]  [⏻ Quit]
     var cx = width - pad

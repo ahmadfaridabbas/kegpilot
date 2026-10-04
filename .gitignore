@@ -3,3 +3,6 @@
 src/build/
 .build/
 *.dSYM/
+
+# Local design-source inputs (raw icon/glyph masters) — kept off GitHub.
+assets-source/

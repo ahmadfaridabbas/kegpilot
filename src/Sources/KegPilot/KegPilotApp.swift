@@ -18,7 +18,7 @@ enum AppInfo {
     /// Marketing version (CFBundleShortVersionString), with build number when available.
     static var versionString: String {
         let info = Bundle.main.infoDictionary
-        let short = info?["CFBundleShortVersionString"] as? String ?? "2.1"
+        let short = info?["CFBundleShortVersionString"] as? String ?? "2.2"
         if let build = info?["CFBundleVersion"] as? String, !build.isEmpty {
             return "Version \(short) (\(build))"
         }
@@ -62,7 +62,7 @@ enum BrandImages {
     /// tints it for light/dark menu bars as usual. When there's a badge we must draw in color (a
     /// template image can't carry a colored dot), so the result is a non-template composite: the
     /// base glyph is drawn as a filled template using the current control text color so it still
-    /// looks native, then an amber dot is stamped on top.
+    /// looks native, then a red dot is stamped on top.
     static func menuBarBadged(count: Int, running: Bool) -> NSImage {
         guard count > 0, !running else { return menuBar }
         let size = NSSize(width: 18, height: 18)
@@ -80,14 +80,14 @@ enum BrandImages {
         } else {
             menuBar.draw(in: NSRect(origin: .zero, size: size))
         }
-        // Amber dot in the top-right corner.
+        // Red dot in the top-right corner.
         let dotDiameter: CGFloat = 7
         let dotRect = NSRect(x: size.width - dotDiameter, y: size.height - dotDiameter,
                              width: dotDiameter, height: dotDiameter)
-        NSColor(calibratedRed: 0.878, green: 0.584, blue: 0.184, alpha: 1).setFill()  // #e0952f
+        NSColor(calibratedRed: 1.0, green: 0.231, blue: 0.188, alpha: 1).setFill()  // #ff3b30 (system red)
         NSBezierPath(ovalIn: dotRect).fill()
         composite.unlockFocus()
-        composite.isTemplate = false  // keep the amber dot in color
+        composite.isTemplate = false  // keep the red dot in color
         return composite
     }
 }
@@ -138,7 +138,9 @@ struct Dashboard: View {
                     .frame(width: 54, height: 54).accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 3) {
                     Text("KegPilot").font(.system(size: 22, weight: .semibold, design: .rounded)).foregroundStyle(theme.text)
-                    Text("Homebrew from your menu bar.").foregroundStyle(theme.secondaryText)
+                    Text("Homebrew from your menu bar.")
+                        .foregroundStyle(theme.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(AppInfo.versionString)
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(theme.tertiaryText)
@@ -201,6 +203,7 @@ struct Dashboard: View {
                     Label("Close", systemImage: "xmark.circle")
                 }
                 .buttonStyle(.bordered).controlSize(.small)
+                .fixedSize()
                 .keyboardShortcut("w")
                 .help("Close this panel; KegPilot stays in the menu bar")
                 .accessibilityLabel("Close panel")
@@ -210,6 +213,7 @@ struct Dashboard: View {
                     Label("Quit", systemImage: "power")
                 }
                 .buttonStyle(.bordered).controlSize(.small)
+                .fixedSize()
                 .keyboardShortcut("q")
                 .disabled(model.busy)
                 .help(model.busy ? "Stop the running command before quitting" : "Quit KegPilot")
