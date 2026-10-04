@@ -98,7 +98,7 @@ enum AppUpdate {
     /// The `SHA256SUMS.txt` published alongside the download on the website, used to verify a
     /// self-update before installing it. (The website copy is stable and CORS-free.)
     static var checksumsURL: URL {
-        URL(string: "https://brewbar.netlify.app/downloads/SHA256SUMS.txt")!
+        URL(string: "https://kegpilot.netlify.app/downloads/SHA256SUMS.txt")!
     }
 
     /// Parse a `SHA256SUMS.txt` (`<hex>␠␠<filename>` lines) into a filename→hash map (lowercased).

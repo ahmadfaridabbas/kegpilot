@@ -4,7 +4,7 @@ This repository contains the app source, interface renders, website, and a ready
 
 Repository: https://github.com/ahmadfaridabbas/kegpilot
 
-Website: https://brewbar.netlify.app/
+Website: https://kegpilot.netlify.app/
 
 ## 1. Upload to GitHub
 
@@ -48,4 +48,4 @@ The site is optimized for discovery with on-page SEO in `docs/`:
 
 Target keywords are the app's realistic high-intent queries — "Homebrew GUI", "Homebrew GUI Mac", "Homebrew menu bar app", "manage Homebrew updates", "Homebrew without Terminal" — not the ultra-competitive bare term "homebrew".
 
-After deploying, submit the site in **Google Search Console** (https://search.google.com/search-console): add the URL-prefix property `https://brewbar.netlify.app/`, verify via the HTML-tag or Google Analytics method, then submit `sitemap.xml` under **Sitemaps** and use **URL Inspection → Request indexing** for the home page. Optionally do the same in **Bing Webmaster Tools**. Validate structured data with Google's Rich Results Test.
+After deploying, submit the site in **Google Search Console** (https://search.google.com/search-console): add the URL-prefix property `https://kegpilot.netlify.app/`, verify via the HTML-tag or Google Analytics method, then submit `sitemap.xml` under **Sitemaps** and use **URL Inspection → Request indexing** for the home page. Optionally do the same in **Bing Webmaster Tools**. Validate structured data with Google's Rich Results Test.

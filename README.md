@@ -2,7 +2,7 @@
 
 A native SwiftUI menu-bar app for **Homebrew** on Apple Silicon, macOS 13 Ventura or newer. Run maintenance, browse installed packages, and manage updates from the menu bar with a live command console — no Terminal required.
 
-**[Website & gallery](https://brewbar.netlify.app/)** · **[Download](https://github.com/ahmadfaridabbas/kegpilot/releases/latest)** · macOS 13+ · Apple Silicon
+**[Website & gallery](https://kegpilot.netlify.app/)** · **[Download](https://github.com/ahmadfaridabbas/kegpilot/releases/latest)** · macOS 13+ · Apple Silicon
 
 ![KegPilot maintenance dashboard in dark mode](docs/assets/hero.png)
 

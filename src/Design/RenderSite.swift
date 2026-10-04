@@ -494,7 +494,7 @@ func renderOgCard(theme t: Theme) -> NSBitmapImageRep {
     }
 
     // Footer URL.
-    text("brewbar.netlify.app", NSPoint(x: pad, y: 40), size: 20, color: c(0xA7AAA9), weight: .medium)
+    text("kegpilot.netlify.app", NSPoint(x: pad, y: 40), size: 20, color: c(0xA7AAA9), weight: .medium)
 
     // Right column: a scaled dashboard peek, clipped, bleeding off the right edge.
     let panelRep = renderDashboard(width: 560, height: 680, theme: t, tab: .maintenance, seg: 2)
