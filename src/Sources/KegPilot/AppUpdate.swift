@@ -2,7 +2,7 @@ import Foundation
 
 /// Phase 1 in-app update check (detect-and-guide, no self-replace).
 ///
-/// BrewBar is distributed as a ZIP of `BrewBar.app` on GitHub Releases. This model queries the
+/// KegPilot is distributed as a ZIP of `KegPilot.app` on GitHub Releases. This model queries the
 /// GitHub Releases API for the latest published release, compares its tag to the running app's
 /// `CFBundleShortVersionString`, and — when a newer version exists — surfaces it in the Options
 /// menu and a header banner. Clicking opens the release page in the browser; downloading/replacing
@@ -12,7 +12,7 @@ import Foundation
 enum AppUpdate {
     /// The GitHub owner/repo the releases are published under. Centralized so the URL and the
     /// human-facing release page stay in sync.
-    static let repo = "ahmadfaridabbas/brewbar"
+    static let repo = "ahmadfaridabbas/kegpilot"
 
     /// The GitHub REST endpoint for the latest (non-draft, non-prerelease) release.
     static var latestReleaseAPI: URL {
@@ -89,16 +89,16 @@ enum AppUpdate {
     }
 
     /// A fallback download URL derived from the tag when the JSON has no usable asset entry:
-    /// `https://github.com/<repo>/releases/download/<tag>/BrewBar-<version>.zip`.
+    /// `https://github.com/<repo>/releases/download/<tag>/KegPilot-<version>.zip`.
     static func fallbackZipURL(tag: String) -> URL? {
         let version = displayVersion(fromTag: tag)
-        return URL(string: "https://github.com/\(repo)/releases/download/\(tag)/BrewBar-\(version).zip")
+        return URL(string: "https://github.com/\(repo)/releases/download/\(tag)/KegPilot-\(version).zip")
     }
 
     /// The `SHA256SUMS.txt` published alongside the download on the website, used to verify a
     /// self-update before installing it. (The website copy is stable and CORS-free.)
     static var checksumsURL: URL {
-        URL(string: "https://ahmadfaridabbas.github.io/brewbar/downloads/SHA256SUMS.txt")!
+        URL(string: "https://brewbar.netlify.app/downloads/SHA256SUMS.txt")!
     }
 
     /// Parse a `SHA256SUMS.txt` (`<hex>␠␠<filename>` lines) into a filename→hash map (lowercased).
@@ -115,8 +115,8 @@ enum AppUpdate {
         return map
     }
 
-    /// The expected asset filename for a tag, e.g. `v1.27` → `BrewBar-1.27.zip`.
+    /// The expected asset filename for a tag, e.g. `v1.27` → `KegPilot-1.27.zip`.
     static func assetFileName(forTag tag: String) -> String {
-        "BrewBar-\(displayVersion(fromTag: tag)).zip"
+        "KegPilot-\(displayVersion(fromTag: tag)).zip"
     }
 }

@@ -1,4 +1,4 @@
-// Offscreen marketing renders of the BrewBar dashboard, drawn from the app's own
+// Offscreen marketing renders of the KegPilot dashboard, drawn from the app's own
 // visual design (colors, layout, SF Symbols). Produces PNGs for the website gallery.
 // Run from the project root:  swift Design/RenderSite.swift
 // These are native offscreen renders, not screen captures.
@@ -159,8 +159,8 @@ func renderDashboard(width: CGFloat, height: CGFloat, theme t: Theme, tab: Tab,
 
     // Header: icon + title + version, then options / Close / Quit on the right
     drawAppIcon(NSRect(x: pad, y: top - 54, width: 54, height: 54), t)
-    text("BrewBar", NSPoint(x: pad + 66, y: top - 26), size: 22, color: t.ink, weight: .semibold, rounded: true)
-    text("A little care for your Homebrew.", NSPoint(x: pad + 66, y: top - 44), size: 13, color: t.muted)
+    text("KegPilot", NSPoint(x: pad + 66, y: top - 26), size: 22, color: t.ink, weight: .semibold, rounded: true)
+    text("Homebrew from your menu bar.", NSPoint(x: pad + 66, y: top - 44), size: 13, color: t.muted)
     text("Version 2.1 (42)", NSPoint(x: pad + 66, y: top - 58), size: 10, color: t.muted, weight: .medium)
 
     // Right-aligned controls: [•••]  [x Close]  [⏻ Quit]
@@ -479,7 +479,7 @@ func renderOgCard(theme t: Theme) -> NSBitmapImageRep {
     // Left column: icon, title, tagline, feature line.
     drawAppIcon(NSRect(x: pad, y: height - pad - 132, width: 132, height: 132), t)
 
-    text("BrewBar", NSPoint(x: pad, y: height - pad - 232), size: 74, color: c(0xF4F4EE), weight: .semibold, rounded: true)
+    text("KegPilot", NSPoint(x: pad, y: height - pad - 232), size: 74, color: c(0xF4F4EE), weight: .semibold, rounded: true)
     text("Homebrew GUI & menu-bar manager for Mac", NSPoint(x: pad, y: height - pad - 292), size: 30, color: t.accent, weight: .medium)
 
     let lines = [
@@ -494,7 +494,7 @@ func renderOgCard(theme t: Theme) -> NSBitmapImageRep {
     }
 
     // Footer URL.
-    text("ahmadfaridabbas.github.io/brewbar", NSPoint(x: pad, y: 40), size: 20, color: c(0xA7AAA9), weight: .medium)
+    text("brewbar.netlify.app", NSPoint(x: pad, y: 40), size: 20, color: c(0xA7AAA9), weight: .medium)
 
     // Right column: a scaled dashboard peek, clipped, bleeding off the right edge.
     let panelRep = renderDashboard(width: 560, height: 680, theme: t, tab: .maintenance, seg: 2)

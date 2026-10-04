@@ -1,12 +1,12 @@
-# BrewBar
+# KegPilot
 
 A native SwiftUI menu-bar utility for Apple Silicon, macOS 13 Ventura or newer.
 
 ## Open, build, run
 
-1. Open `BrewBar.xcodeproj` in Xcode 15 or newer.
-2. Select the **BrewBar** scheme and **My Mac**, then press **Run** (⌘R).
-3. Click the cup icon in the macOS menu bar. BrewBar intentionally has no Dock icon.
+1. Open `KegPilot.xcodeproj` in Xcode 15 or newer.
+2. Select the **KegPilot** scheme and **My Mac**, then press **Run** (⌘R).
+3. Click the cup icon in the macOS menu bar. KegPilot intentionally has no Dock icon.
 
 The project uses local ad-hoc signing and needs no dependencies or developer account for a local build. If Xcode requests signing details, select “Sign to Run Locally” under Signing & Capabilities. Developer ID signing and notarization are required for normal public distribution.
 
@@ -14,12 +14,12 @@ Without Xcode, installed Apple Command Line Tools can build it:
 
 ```sh
 ./build.sh
-open build/BrewBar.app
+open build/KegPilot.app
 ```
 
-The separately supplied `BrewBar-App.zip` contains an Apple Silicon build. It is ad-hoc signed, not notarized. Building locally in Xcode is the recommended route if macOS blocks the downloaded app.
+The separately supplied `KegPilot-App.zip` contains an Apple Silicon build. It is ad-hoc signed, not notarized. Building locally in Xcode is the recommended route if macOS blocks the downloaded app.
 
-## Using BrewBar
+## Using KegPilot
 
 - **Update** fetches Homebrew and package definitions.
 - **Outdated** lists available package updates.
@@ -38,7 +38,7 @@ Only one operation runs at a time within the app. Closing the panel leaves the c
 
 ## Environment and limitations
 
-BrewBar reads environment variables from `/bin/zsh -l` (including `.zprofile` and `.zlogin`, not interactive-only `.zshrc`). A five-second deadline cancels slow startup scripts and falls back to the inherited environment and standard paths. The UI remains responsive during discovery.
+KegPilot reads environment variables from `/bin/zsh -l` (including `.zprofile` and `.zlogin`, not interactive-only `.zshrc`). A five-second deadline cancels slow startup scripts and falls back to the inherited environment and standard paths. The UI remains responsive during discovery.
 
 Resolution prefers `/opt/homebrew/bin/brew`, then the augmented login PATH, with `/usr/local/bin` and standard system paths as fallbacks. Commands launch directly using fixed arguments, without shell interpolation. The resolved path is displayed in the footer. Use the options menu to retry discovery after installing Homebrew.
 
@@ -48,7 +48,7 @@ App Sandbox is disabled because Homebrew needs access to its installation and pa
 
 ## Architecture
 
-- `BrewBarApp.swift`: MenuBarExtra window, adaptive semantic colors, action grid, selectable scrolling console, accessibility labels, and quit protection.
+- `KegPilotApp.swift`: MenuBarExtra window, adaptive semantic colors, action grid, selectable scrolling console, accessibility labels, and quit protection.
 - `BrewModel.swift`: main-thread observable state, environment discovery, throttled UTF-8 output, bounded retention, and process activity lifecycle. Owned at app level so closing the panel does not lose a running job.
 - `CommandRunner.swift`: background POSIX process launcher with merged output pipe, dedicated process group, cancellation escalation, and exit-status decoding.
 
@@ -76,9 +76,9 @@ Includes a custom amber terminal-cup app icon with all macOS icon sizes, a match
 
 ## Version 1.2: Installed packages
 
-Choose **Installed** in the same menu-bar window. BrewBar loads `brew info --json=v2 --installed` and shows installed Homebrew formulae and cask apps with name, description, installed version, and type. Search matches names, tokens, descriptions, and types. Software installed outside Homebrew is not included.
+Choose **Installed** in the same menu-bar window. KegPilot loads `brew info --json=v2 --installed` and shows installed Homebrew formulae and cask apps with name, description, installed version, and type. Search matches names, tokens, descriptions, and types. Software installed outside Homebrew is not included.
 
-Select **Uninstall** on a row and confirm the named package. BrewBar runs `brew uninstall --formula <full_name>` or `brew uninstall --cask <full_token>` using separate, validated arguments. It does not add `--force`, `--ignore-dependencies`, or `--zap`. Homebrew's normal dependency checks remain active. Casks may run their own uninstall scripts; those requiring administrator interaction may fail in this noninteractive console.
+Select **Uninstall** on a row and confirm the named package. KegPilot runs `brew uninstall --formula <full_name>` or `brew uninstall --cask <full_token>` using separate, validated arguments. It does not add `--force`, `--ignore-dependencies`, or `--zap`. Homebrew's normal dependency checks remain active. Casks may run their own uninstall scripts; those requiring administrator interaction may fail in this noninteractive console.
 
 The console below the list shows live uninstall output, cancellation, and exit status. All maintenance, inventory loading, and uninstall operations share the same busy guard. After a successful removal its row disappears; choose the refresh icon to verify the complete inventory, including any dependency changes. Failed/cancelled operations mark the inventory stale and retain rows until refresh. Refresh replaces the current console output; copy it first if needed.
 
@@ -88,9 +88,9 @@ Version 1.2 validation: optimized Apple Silicon build passed; tests cover packag
 
 ## Version 1.3: Available updates
 
-The new **Updates** tab displays Homebrew's `outdated --json=v2` result as searchable rows, with installed → current versions and individual **Upgrade** buttons. Revision strings such as `0.12.0_1` are preserved exactly; BrewBar does not perform its own version comparisons. The Maintenance **Outdated** action now opens this list. Pinned entries, when reported by Homebrew, are labeled and disabled.
+The new **Updates** tab displays Homebrew's `outdated --json=v2` result as searchable rows, with installed → current versions and individual **Upgrade** buttons. Revision strings such as `0.12.0_1` are preserved exactly; KegPilot does not perform its own version comparisons. The Maintenance **Outdated** action now opens this list. Pinned entries, when reported by Homebrew, are labeled and disabled.
 
-**Check** reads the current Homebrew definitions. **Refresh definitions** first runs `brew update`, then checks again. **Upgrade All** follows standard `brew upgrade` behavior. Self-updating/latest-version casks follow Homebrew's default selection rules and environment; BrewBar does not force `--greedy`. Different metadata freshness, Homebrew installations, or greedy settings in another app can produce different results. The resolved Homebrew path remains visible below the console.
+**Check** reads the current Homebrew definitions. **Refresh definitions** first runs `brew update`, then checks again. **Upgrade All** follows standard `brew upgrade` behavior. Self-updating/latest-version casks follow Homebrew's default selection rules and environment; KegPilot does not force `--greedy`. Different metadata freshness, Homebrew installations, or greedy settings in another app can produce different results. The resolved Homebrew path remains visible below the console.
 
 Successful upgrade operations check updates again and append the check to the retained upgrade log. Failures/cancellations keep their exit status and mark results stale. Refresh errors preserve previous rows and show an error instead of reporting that everything is current. Operations share the existing concurrency guard and Stop control.
 
@@ -122,7 +122,7 @@ Regression tests use a temporary fake brew executable, never real package remova
 
 The dashboard header now shows the app version beneath the tagline, e.g. `Version 1.9 (10)`. The string is read at runtime from the bundle's `Info.plist` (`CFBundleShortVersionString` and `CFBundleVersion`), so it always reflects the built bundle and requires no manual edit in code when the plist is bumped. A matching accessibility label is provided.
 
-The header also adds visible **Close** and **Quit** buttons. Close dismisses the panel while BrewBar stays in the menu bar; Quit terminates the app and is disabled while a command is running (matching the existing quit-protection guard). The Quit button keeps the ⌘Q shortcut. Optimized arm64 build verified; the built bundle reports version 1.9 (build 10).
+The header also adds visible **Close** and **Quit** buttons. Close dismisses the panel while KegPilot stays in the menu bar; Quit terminates the app and is disabled while a command is running (matching the existing quit-protection guard). The Quit button keeps the ⌘Q shortcut. Optimized arm64 build verified; the built bundle reports version 1.9 (build 10).
 
 ## Version 1.10: Live download progress
 
@@ -134,7 +134,7 @@ Optimized arm64 build verified; the built bundle reports version 1.10 (build 11)
 
 ## Version 1.11: MIT license
 
-BrewBar is now released under the MIT License (a `LICENSE` file at the repository root; GitHub detects it as MIT). The panel footer shows a small `MIT License · © 2026 Ahmad Farid Abbas` line beneath the "One command at a time" status, and the website footer links the license.
+KegPilot is now released under the MIT License (a `LICENSE` file at the repository root; GitHub detects it as MIT). The panel footer shows a small `MIT License · © 2026 Ahmad Farid Abbas` line beneath the "One command at a time" status, and the website footer links the license.
 
 Optimized arm64 build verified; the built bundle reports version 1.11 (build 12).
 
@@ -146,7 +146,7 @@ Optimized arm64 build verified; the built bundle reports version 1.12 (build 13)
 
 ## Version 1.13: Papery themes
 
-The Appearance control expands from three options to five: **System**, **Light**, **Dark**, **Papery Light**, and **Papery Dark**. The two Papery themes are a warmer, stationery-inspired look — Papery Light is a cream/parchment base with dark ink text, Papery Dark is a charcoal-paper base with warm off-white text — both keeping BrewBar's amber accent (a slightly deeper amber on cream for contrast). A faint, static paper grain sits behind the panel content.
+The Appearance control expands from three options to five: **System**, **Light**, **Dark**, **Papery Light**, and **Papery Dark**. The two Papery themes are a warmer, stationery-inspired look — Papery Light is a cream/parchment base with dark ink text, Papery Dark is a charcoal-paper base with warm off-white text — both keeping KegPilot's amber accent (a slightly deeper amber on cream for contrast). A faint, static paper grain sits behind the panel content.
 
 Under the hood this adds a real theming layer (`Theme.swift`): an `AppearanceMode` enum (migration-safe — unknown or legacy `"appearance"` values fall back to System) and a `Theme` value threaded through the SwiftUI environment. Views no longer hardcode system materials/colors; backgrounds, surfaces, borders, text, the console, and accents all resolve from the active theme. Papery modes ride on an underlying aqua/darkAqua `NSAppearance` so native controls stay legible, then override the visuals. The Appearance picker became a compact menu popup to fit five options in the 550-pt panel. Added `AppearanceMode`/`Theme` unit tests.
 
@@ -154,7 +154,7 @@ Optimized arm64 build verified; the built bundle reports version 1.13 (build 14)
 
 ## Version 1.14: Search & Install
 
-The Installed tab gains a mode toggle — **Installed** and **Search & Install**. In Search mode, type a name and press Return to run `brew search`; BrewBar then enriches the candidates with `brew info --json=v2` so each result row shows a description, version, kind (formula/cask), and whether it's already installed. Installing runs through the same confirmation + live-console path as uninstall/upgrade (validated `install --formula`/`--cask <token>`, no shell interpolation). Already-installed results show an "Installed" marker instead of a button. On a successful install the results row flips to installed and the installed inventory auto-refreshes.
+The Installed tab gains a mode toggle — **Installed** and **Search & Install**. In Search mode, type a name and press Return to run `brew search`; KegPilot then enriches the candidates with `brew info --json=v2` so each result row shows a description, version, kind (formula/cask), and whether it's already installed. Installing runs through the same confirmation + live-console path as uninstall/upgrade (validated `install --formula`/`--cask <token>`, no shell interpolation). Already-installed results show an "Installed" marker instead of a button. On a successful install the results row flips to installed and the installed inventory auto-refreshes.
 
 New `SearchResult` model + parser (reuses the v1.12 `JSONExtraction` preamble tolerance). Also fixed the warning/stale text color, which used the system `.orange` (`#FF9500`) and was hard to read on light backgrounds — it's now a darker burnt-orange (`#B35D00`) on light and a brighter amber-orange (`#FF9F3C`) on dark. Added search-parse and install-argument unit tests.
 
@@ -162,9 +162,9 @@ Optimized arm64 build verified; the built bundle reports version 1.14 (build 15)
 
 ## Version 1.15: Answer Homebrew's upgrade/install prompt
 
-Homebrew 7 defaults `brew upgrade` and `brew install` to an "ask mode" that prints a summary and then waits for a `Do you want to proceed? [y/n]` confirmation. Because BrewBar runs brew under a pseudo-terminal (so it can show a live progress bar), brew saw a TTY, printed the prompt, and blocked forever — nothing ever answered it, so the command sat on "Running".
+Homebrew 7 defaults `brew upgrade` and `brew install` to an "ask mode" that prints a summary and then waits for a `Do you want to proceed? [y/n]` confirmation. Because KegPilot runs brew under a pseudo-terminal (so it can show a live progress bar), brew saw a TTY, printed the prompt, and blocked forever — nothing ever answered it, so the command sat on "Running".
 
-BrewBar now answers that prompt interactively. When brew asks, the console shows the question with **Yes** and **No** buttons (Return = Yes, Escape = No). The runner keeps the PTY master open and writes a single `y`/`n` character to it — matching brew's `$stdin.getch` read (no newline needed). Yes proceeds; No makes brew abort (`exit 1`), reported as "Needs attention". Stop still force-stops the process group.
+KegPilot now answers that prompt interactively. When brew asks, the console shows the question with **Yes** and **No** buttons (Return = Yes, Escape = No). The runner keeps the PTY master open and writes a single `y`/`n` character to it — matching brew's `$stdin.getch` read (no newline needed). Yes proceeds; No makes brew abort (`exit 1`), reported as "Needs attention". Stop still force-stops the process group.
 
 Implementation: `CommandRunner` gained a `send(_:)` that writes to the PTY master (tracked as `inputFD`, cleared under lock when the fd closes). `BrewModel` detects the trailing `[y/n]`/`(y/N)` in the live output (`detectPrompt()`), exposes `awaitingInput`/`promptText`, and `answer(_:)` echoes the choice and forwards it to the runner. The prompt state clears on new command, completion, and Stop. JSON/file captures (search, info, outdated) never prompt because they don't use the PTY.
 
@@ -185,17 +185,17 @@ Optimized arm64 build verified; the built bundle reports version 1.15.1 (build 1
 
 Downloads now show a **persistent progress bar** in the console instead of only brew's inline `#### NN.N%` text (which, for cask downloads like ChatGPT, often looked stalled after `==> Downloading …`). A dedicated bar sits below the console log while a file is fetching: it shows the file name, a linear `ProgressView`, and — when the size is known — `X MB of Y MB · NN%`. The bar stays visible for the whole download and disappears the moment it finishes, so the user always knows work is in progress rather than guessing whether to keep waiting.
 
-Implementation: a new AppKit-free `DownloadProgress` model + `DownloadProgressParser` turns brew's PTY output into progress actions — `==> Downloading <url>` starts the bar (and extracts a readable file name, stripping query strings and percent-escapes), each `#### NN.N%` frame advances it, and `100%` / `Downloaded to:` / any following `==>` step ends it. Because brew's bar carries only a percentage, `BrewModel` issues a lightweight `HEAD` request on the download URL to learn the total size and derives the downloaded bytes from the live percentage (best-effort; the bar shows just the percentage if the size can't be fetched). The bar clears on command start/finish, Stop, and Clear, with a per-request token so a slow size lookup can't land on a later download. `BrewBarApp` renders the `DownloadProgressBar` view between the console scrollback and the toolbar. Added parser unit tests (start/advance/finish, file-name extraction, byte-summary formatting).
+Implementation: a new AppKit-free `DownloadProgress` model + `DownloadProgressParser` turns brew's PTY output into progress actions — `==> Downloading <url>` starts the bar (and extracts a readable file name, stripping query strings and percent-escapes), each `#### NN.N%` frame advances it, and `100%` / `Downloaded to:` / any following `==>` step ends it. Because brew's bar carries only a percentage, `BrewModel` issues a lightweight `HEAD` request on the download URL to learn the total size and derives the downloaded bytes from the live percentage (best-effort; the bar shows just the percentage if the size can't be fetched). The bar clears on command start/finish, Stop, and Clear, with a per-request token so a slow size lookup can't land on a later download. `KegPilotApp` renders the `DownloadProgressBar` view between the console scrollback and the toolbar. Added parser unit tests (start/advance/finish, file-name extraction, byte-summary formatting).
 
 Optimized arm64 build verified; the built bundle reports version 1.16 (build 18).
 
 ## Version 1.29: Admin-password prompt for pkg casks (secure, never stored)
 
-Some casks (e.g. Zoom) ship a `.pkg` payload whose install/uninstall runs `/usr/sbin/installer` or removes launchctl services under `sudo`. Homebrew asks for an administrator password via its `SUDO_ASKPASS` mechanism; because BrewBar previously ran brew with `SUDO_ASKPASS=/usr/bin/false` (to fail fast rather than hang on a hidden prompt), those operations dead-ended with `sudo: a password is required` and `Needs attention · Exit 1`. BrewBar now **securely collects the password and completes the operation**, while guaranteeing the password is never stored.
+Some casks (e.g. Zoom) ship a `.pkg` payload whose install/uninstall runs `/usr/sbin/installer` or removes launchctl services under `sudo`. Homebrew asks for an administrator password via its `SUDO_ASKPASS` mechanism; because KegPilot previously ran brew with `SUDO_ASKPASS=/usr/bin/false` (to fail fast rather than hang on a hidden prompt), those operations dead-ended with `sudo: a password is required` and `Needs attention · Exit 1`. KegPilot now **securely collects the password and completes the operation**, while guaranteeing the password is never stored.
 
-**Security model (the whole point).** The password is held in memory only for the duration of a single Homebrew command and is **never** placed in `argv`, in an environment variable, on disk, in the macOS Keychain, in `UserDefaults`, in the console log, or on the network. The path it takes: you type it into a masked `SecureField` (bound to `BrewModel.passwordDraft`); on Submit it is handed to a one-shot `AskpassBroker` and the on-screen draft is cleared; the broker writes it to a private FIFO (named pipe) — an in-kernel pipe buffer, *not* a file — inside a per-command temp directory (dir `0700`, FIFO `0600`, owned by the user). A tiny helper script set as `SUDO_ASKPASS` reads from that pipe and streams the password to `sudo`'s stdin (exactly the mechanism `sudo -A` expects; Homebrew only adds `-A` when `SUDO_ASKPASS` is set — `system_command.rb` L418). The draft is cleared on submit/cancel/dismiss, and the broker's in-memory copy + the temp FIFOs are destroyed the instant the command finishes, is stopped, or the console is cleared. For a multi-step action (e.g. a cask uninstall that removes several services), the broker caches the password for that one command so the user types it **once** and the remaining `sudo` prompts are answered from memory. Honest caveat: Swift strings aren't guaranteed-zeroed by the runtime, so a transient copy may briefly linger in freed memory until reused — the same practical limit every GUI `sudo` front-end has; BrewBar best-effort zeroes its own byte buffer after writing.
+**Security model (the whole point).** The password is held in memory only for the duration of a single Homebrew command and is **never** placed in `argv`, in an environment variable, on disk, in the macOS Keychain, in `UserDefaults`, in the console log, or on the network. The path it takes: you type it into a masked `SecureField` (bound to `BrewModel.passwordDraft`); on Submit it is handed to a one-shot `AskpassBroker` and the on-screen draft is cleared; the broker writes it to a private FIFO (named pipe) — an in-kernel pipe buffer, *not* a file — inside a per-command temp directory (dir `0700`, FIFO `0600`, owned by the user). A tiny helper script set as `SUDO_ASKPASS` reads from that pipe and streams the password to `sudo`'s stdin (exactly the mechanism `sudo -A` expects; Homebrew only adds `-A` when `SUDO_ASKPASS` is set — `system_command.rb` L418). The draft is cleared on submit/cancel/dismiss, and the broker's in-memory copy + the temp FIFOs are destroyed the instant the command finishes, is stopped, or the console is cleared. For a multi-step action (e.g. a cask uninstall that removes several services), the broker caches the password for that one command so the user types it **once** and the remaining `sudo` prompts are answered from memory. Honest caveat: Swift strings aren't guaranteed-zeroed by the runtime, so a transient copy may briefly linger in freed memory until reused — the same practical limit every GUI `sudo` front-end has; KegPilot best-effort zeroes its own byte buffer after writing.
 
-**Implementation.** New AppKit-free `Sources/BrewBar/AskpassBroker.swift` (so it compiles in both test targets): creates the temp dir + request/response FIFOs + helper script; `startWatching(onRequest:)` runs a background loop that opens the request FIFO (blocks until the helper signals), then either auto-answers from the cached password or raises the UI prompt; `sendPassword(_:)` / `declineOnce()` write to the response FIFO off the main queue (a separate concurrent queue from the watcher's serial queue — sharing one deadlocked `sendPassword` behind the watcher's blocking `open`, fixed during development); `cleanup()` is idempotent, unblocks both a parked watcher and a parked helper `cat`, and removes the dir. `BrewModel` gains `@Published awaitingPassword` + `passwordDraft`, a pure `commandMayNeedAdminPassword(_:)` classifier (cask `install`/`reinstall`/`uninstall`/`zap`, plus a bare `upgrade`), and wires `SUDO_ASKPASS=<broker helper>` for exactly those PTY commands (overriding the env's `/usr/bin/false`); `submitPassword`/`cancelPassword` forward to the broker and clear the draft; the broker is torn down on command start/finish/stop. `BrewBarApp` adds a `PasswordPromptBar` subview (lock icon + `SecureField` + Submit/Cancel) mirroring the `[y/n]` bar. (Toolchain note: `@State` is a SwiftUI macro unavailable under Command-Line-Tools `swiftc`, so the field binds to a model `@Published` instead — the app uses no `@State` anywhere.)
+**Implementation.** New AppKit-free `Sources/KegPilot/AskpassBroker.swift` (so it compiles in both test targets): creates the temp dir + request/response FIFOs + helper script; `startWatching(onRequest:)` runs a background loop that opens the request FIFO (blocks until the helper signals), then either auto-answers from the cached password or raises the UI prompt; `sendPassword(_:)` / `declineOnce()` write to the response FIFO off the main queue (a separate concurrent queue from the watcher's serial queue — sharing one deadlocked `sendPassword` behind the watcher's blocking `open`, fixed during development); `cleanup()` is idempotent, unblocks both a parked watcher and a parked helper `cat`, and removes the dir. `BrewModel` gains `@Published awaitingPassword` + `passwordDraft`, a pure `commandMayNeedAdminPassword(_:)` classifier (cask `install`/`reinstall`/`uninstall`/`zap`, plus a bare `upgrade`), and wires `SUDO_ASKPASS=<broker helper>` for exactly those PTY commands (overriding the env's `/usr/bin/false`); `submitPassword`/`cancelPassword` forward to the broker and clear the draft; the broker is torn down on command start/finish/stop. `KegPilotApp` adds a `PasswordPromptBar` subview (lock icon + `SecureField` + Submit/Cancel) mirroring the `[y/n]` bar. (Toolchain note: `@State` is a SwiftUI macro unavailable under Command-Line-Tools `swiftc`, so the field binds to a model `@Published` instead — the app uses no `@State` anywhere.)
 
 **Tests.** Five new regressions, all passing: a pure helper-script/escaping check and two end-to-end broker handshakes in RunnerTests (deliver the password to the helper's stdout; decline → empty password); the `commandMayNeedAdminPassword` classifier, a full model→broker→helper install (a fake brew reads `SUDO_ASKPASS`, runs the helper, captures the password, exits 0 only if it matches), the cancel path, and a repeated-prompt caching test (two `sudo` prompts answered after one entry) in UninstallTests. `AskpassBroker.swift` added to both `test.sh` swiftc lines.
 
@@ -207,13 +207,13 @@ Fixes a color inconsistency in the console's live multi-download block. When a d
 
 **Root cause.** The rows used a SwiftUI `ProgressView(value:)` tinted with `.tint(entry.done ? .green : accent)`. A `ProgressView` that is *born full* (created already at `fraction == 1.0`) does not reliably pick up a `.tint` applied in the same render pass and falls back to the system accent color (blue). A bar that animates up to completion while live has its tint resolved before it fills, so it shows green — hence the live-vs-reopen discrepancy. The `downloads` array is in-memory only (not persisted), so this was purely a first-paint rendering quirk, not a state problem.
 
-**Fix.** Replaced the system `ProgressView` in `LiveDownloads` (`BrewBarApp.swift`) with an explicit capsule bar: a faint track plus a filled `Capsule` whose width is `geometry.width × fraction`, drawn directly in `entry.done ? .green : theme.accent`. Because the fill color is painted explicitly rather than via `.tint`, a completed bar is always green regardless of whether it finished live or was already complete at first paint. View-only change; all existing tests continue to pass.
+**Fix.** Replaced the system `ProgressView` in `LiveDownloads` (`KegPilotApp.swift`) with an explicit capsule bar: a faint track plus a filled `Capsule` whose width is `geometry.width × fraction`, drawn directly in `entry.done ? .green : theme.accent`. Because the fill color is painted explicitly rather than via `.tint`, a completed bar is always green regardless of whether it finished live or was already complete at first paint. View-only change; all existing tests continue to pass.
 
 Optimized arm64 build verified; the built bundle reports version 1.30 (build 39). All 32 test suites pass.
 
 ## Version 2.0: Info button runs a visible `brew info` in the console
 
-Clicking the ⓘ info button on a Search & Install (or Installed / Updates) row now runs a **visible, human-readable `brew info <token>`** into BrewBar's console — the same formatted detail you'd see in Terminal (description, homepage, install state, Caskroom path/size, requirements, artifacts, and analytics) — in addition to the structured popover.
+Clicking the ⓘ info button on a Search & Install (or Installed / Updates) row now runs a **visible, human-readable `brew info <token>`** into KegPilot's console — the same formatted detail you'd see in Terminal (description, homepage, install state, Caskroom path/size, requirements, artifacts, and analytics) — in addition to the structured popover.
 
 **Behavior.** Previously the ⓘ button ran only a quiet `brew info --json=v2 <token>` captured to a temp file (so the console stayed silent) and parsed the JSON into the popover. Now the click first runs a plain `brew info <--cask|--formula> <token>` that streams the Terminal-style text into the console, then **chains** the quiet JSON capture (`preserveOutput: true`, so the plain text stays visible) to fill the popover's structured fields. You get both: the rich inline detail in the console *and* the compact popover with the "Open homepage" link.
 
@@ -225,7 +225,7 @@ Optimized arm64 build verified; the built bundle reports version 2.0 (build 40).
 
 ## Version 2.0.1: `brew info` metadata fetch no longer pops the download bar
 
-A follow-up to 2.0. Clicking ⓘ runs a visible `brew info <token>`, and that command fetches Homebrew's cask/formula definition from the API (e.g. `==> Downloading https://formulae.brew.sh/api/cask/alt-tab.json`). BrewBar's live-download detector saw that `==> Downloading <url>` line and briefly popped the "Downloading 1 item" progress block for the tiny JSON definition file — noise for what is only a read-only info lookup.
+A follow-up to 2.0. Clicking ⓘ runs a visible `brew info <token>`, and that command fetches Homebrew's cask/formula definition from the API (e.g. `==> Downloading https://formulae.brew.sh/api/cask/alt-tab.json`). KegPilot's live-download detector saw that `==> Downloading <url>` line and briefly popped the "Downloading 1 item" progress block for the tiny JSON definition file — noise for what is only a read-only info lookup.
 
 **Fix.** `DownloadProgressParser.parse` now ignores a `==> Downloading` line whose URL is brew's API metadata — a new `isAPIMetadataURL` helper matches host `formulae.brew.sh` with an `/api/…` path ending in `.json` and returns `.none`, in the same spirit as the existing `Downloading Homebrew API data` filter. The match is narrow (host + `/api/…json`) so a real package artifact that merely happens to be a `.json` on another host still starts a normal download.
 
@@ -255,7 +255,7 @@ Optimized arm64 build verified; the built bundle reports version 1.28.5 (build 3
 
 ## Version 1.28.4: About-check console block no longer cascades; tighter line spacing
 
-A follow-up to 1.28.3. The manual update-check prints an About block to the console — `[time] Checking for BrewBar updates…`, then `Current version:` / `Bundle ID:` / `Location:` / `macOS:` / the result line. 1.28.3 aligned the labels *within* the block, but the block as a whole still began at the stale cursor column left by the previous command's output, and because every internal line feed preserves the column (correct per the 1.28 terminal model), each line cascaded progressively further to the right.
+A follow-up to 1.28.3. The manual update-check prints an About block to the console — `[time] Checking for KegPilot updates…`, then `Current version:` / `Bundle ID:` / `Location:` / `macOS:` / the result line. 1.28.3 aligned the labels *within* the block, but the block as a whole still began at the stale cursor column left by the previous command's output, and because every internal line feed preserves the column (correct per the 1.28 terminal model), each line cascaded progressively further to the right.
 
 **Fix.** Every line emitted by `logAppUpdateHeader` (the first line and each padded row) and by `logAppUpdate` (the result line) is now prefixed with a carriage return (`\r…`), resetting the column to 0 before the text is written — so the whole block starts at the left margin regardless of where the previous command left the cursor. Added a regression test driving `checkForAppUpdate(manual:)` after a finished command and asserting the header line, each labelled row, and the macOS row all start at column 0; reverting the header `\r` reproduces the exact cascade symptom.
 
@@ -299,7 +299,7 @@ Optimized arm64 build verified; the built bundle reports version 1.28.1 (build 3
 
 Fixes a console-rendering bug where real `brew` output — especially the parallel download queue and the `✔︎ Cask … (version)` completion lines — rendered with each line marching progressively to the right, so a multi-cask fetch looked garbled instead of matching Terminal.app.
 
-**Root cause.** BrewBar's `TerminalEmulator` iterated the output stream by Swift `Character` (extended grapheme clusters). Homebrew terminates each status line with a carriage-return + line-feed (`"\r\n"`), and Swift treats `"\r\n"` as a **single** `Character` (scalars `[13, 10]`). The emulator's loop saw that one combined grapheme, matched neither the bare-`\r` nor the bare-`\n` case, and handled it as a plain line feed — so the carriage return's **column reset was lost**, and every subsequent line was padded with the previous line's width.
+**Root cause.** KegPilot's `TerminalEmulator` iterated the output stream by Swift `Character` (extended grapheme clusters). Homebrew terminates each status line with a carriage-return + line-feed (`"\r\n"`), and Swift treats `"\r\n"` as a **single** `Character` (scalars `[13, 10]`). The emulator's loop saw that one combined grapheme, matched neither the bare-`\r` nor the bare-`\n` case, and handled it as a plain line feed — so the carriage return's **column reset was lost**, and every subsequent line was padded with the previous line's width.
 
 **Fix.** The emulator now iterates **Unicode scalars**, so `\r` (column 0) and `\n` (next row) are always distinct control codes, exactly as a real terminal processes a byte stream. Zero-width combining marks and variation selectors (e.g. the `U+FE0E` after brew's `✔` check mark) are folded onto the previous cell, so `✔︎` renders as one glyph without disturbing column math. Escape-sequence parsing (`consumeEscape`/`applyCSI`) was converted to scalars to match. Verified against two real captured `brew fetch --cask` streams (`alt-tab clipy cotypist` and `google-chrome firefox`): both render clean, with SGR colour codes stripped and no padding. A CRLF + SGR-check-mark regression test was added to `RunnerTests`, and the `UninstallTests` compile line in `test.sh` now includes `TerminalEmulator.swift` (which `BrewModel` depends on) — all 20 test suites pass.
 
@@ -311,9 +311,9 @@ Fixes a visual glitch where the selected tab in the **Maintenance / Installed / 
 
 ## Version 1.27: One-click self-update
 
-BrewBar can now update itself. When a newer release is available, **Options → Update to X** (or the **Update to X** pill in the header) downloads the new build, verifies it, replaces the app in place, and relaunches — no browser, no drag-and-drop.
+KegPilot can now update itself. When a newer release is available, **Options → Update to X** (or the **Update to X** pill in the header) downloads the new build, verifies it, replaces the app in place, and relaunches — no browser, no drag-and-drop.
 
-**How it works.** The resolved release ZIP is downloaded (progress shown on the pill/menu), its SHA-256 is checked against the published `SHA256SUMS.txt` (a mismatch aborts and leaves the app untouched; if the sums can't be fetched it proceeds, since the download comes from the signed release), it's expanded with `ditto`, the quarantine flag is cleared, and a small detached helper waits for BrewBar to quit, swaps the bundle, and relaunches the new version. The swap is fail-safe: the old app is moved aside first and rolled back if the move-in fails, so a permission error or interruption never leaves a half-installed app. No Apple Developer account is required — the updater clears quarantine and the app stays ad-hoc signed.
+**How it works.** The resolved release ZIP is downloaded (progress shown on the pill/menu), its SHA-256 is checked against the published `SHA256SUMS.txt` (a mismatch aborts and leaves the app untouched; if the sums can't be fetched it proceeds, since the download comes from the signed release), it's expanded with `ditto`, the quarantine flag is cleared, and a small detached helper waits for KegPilot to quit, swaps the bundle, and relaunches the new version. The swap is fail-safe: the old app is moved aside first and rolled back if the move-in fails, so a permission error or interruption never leaves a half-installed app. No Apple Developer account is required — the updater clears quarantine and the app stays ad-hoc signed.
 
 "View Release Notes…" remains available in the Options menu for anyone who prefers the manual download.
 
@@ -321,15 +321,15 @@ Optimized arm64 build verified; the built bundle reports version 1.27 (build 30)
 
 ## Version 1.26.1: Build details in the console on update check
 
-A small follow-up to 1.26. When you choose **Options → Check for Updates…**, BrewBar now prints the running build's details to the console before reporting the result — a visible record of exactly what's installed:
+A small follow-up to 1.26. When you choose **Options → Check for Updates…**, KegPilot now prints the running build's details to the console before reporting the result — a visible record of exactly what's installed:
 
 ```
-[time] Checking for BrewBar updates…
+[time] Checking for KegPilot updates…
   Current version: 1.26.1 (build 29)
   Bundle ID:       com.brewbar.app
-  Location:        /Applications/BrewBar.app
+  Location:        /Applications/KegPilot.app
   macOS:           Version 14.x …
-  You're up to date — BrewBar 1.26.1 is the latest release.
+  You're up to date — KegPilot 1.26.1 is the latest release.
 ```
 
 The result line reflects the outcome (up to date / an available version with its tag / a connection error). Logging is skipped while a Homebrew command is running so it never interleaves with live command output (the menu still shows the status either way).
@@ -338,9 +338,9 @@ Optimized arm64 build verified; the built bundle reports version 1.26.1 (build 2
 
 ## Version 1.26: In-app update check + Quit cleanup
 
-**Check for Updates (Phase 1).** BrewBar now notices when a newer version has been released. A lightweight background check (shortly after launch, then every 6 hours) queries the GitHub Releases API for the latest tag and compares it to the running version. When a newer release exists it's surfaced in two places: an **Options → Check for Updates…** item (which becomes **Download Update — X…**), and a small tappable **"Update available — X"** pill under the version text in the header. Clicking either opens the GitHub release page to download the new build. This is the detect-and-guide phase — it does not replace the app in place (a one-click self-update is a planned follow-up). The check is fail-safe (any network/parse error simply leaves the state as "no update", never a false nag) and never blocks the UI. The version comparison is a pure, unit-tested helper (`AppUpdate.isNewer`) that tolerates `v`-prefixed tags and pre-release suffixes.
+**Check for Updates (Phase 1).** KegPilot now notices when a newer version has been released. A lightweight background check (shortly after launch, then every 6 hours) queries the GitHub Releases API for the latest tag and compares it to the running version. When a newer release exists it's surfaced in two places: an **Options → Check for Updates…** item (which becomes **Download Update — X…**), and a small tappable **"Update available — X"** pill under the version text in the header. Clicking either opens the GitHub release page to download the new build. This is the detect-and-guide phase — it does not replace the app in place (a one-click self-update is a planned follow-up). The check is fail-safe (any network/parse error simply leaves the state as "no update", never a false nag) and never blocks the UI. The version comparison is a pure, unit-tested helper (`AppUpdate.isNewer`) that tolerates `v`-prefixed tags and pre-release suffixes.
 
-**Removed the duplicate Quit.** The Options menu previously had a second "Quit BrewBar" item in addition to the header Quit button, which also meant `⌘Q` was bound twice — and the menu item wasn't guarded against quitting mid-command like the header button is. The menu item is gone; the single busy-guarded Quit button in the header remains (and `AppDelegate.applicationShouldTerminate` still warns if you try to quit while Homebrew is running).
+**Removed the duplicate Quit.** The Options menu previously had a second "Quit KegPilot" item in addition to the header Quit button, which also meant `⌘Q` was bound twice — and the menu item wasn't guarded against quitting mid-command like the header button is. The menu item is gone; the single busy-guarded Quit button in the header remains (and `AppDelegate.applicationShouldTerminate` still warns if you try to quit while Homebrew is running).
 
 Optimized arm64 build verified; the built bundle reports version 1.26 (build 28). All 19 test suites pass, including new coverage for the update version-compare, tag parsing, and fail-safe guards.
 
@@ -350,7 +350,7 @@ Fixes the garbled console text and mismatched progress bar seen when Homebrew do
 
 **The problem.** With several downloads running concurrently, brew redraws a multi-line status block each frame. The console only translated the horizontal cursor move (`ESC[0G` → carriage return) and stripped the vertical moves, so each repaint was appended rather than overwriting — producing stacked, interleaved lines like `Cask homebrew-app … Downloading 2.9MB/5.2MB⣿ Bottle gh … Downloading`. Separately, the progress bar was a single slot, so with multiple downloads it showed one package's name paired with another's byte counts (e.g. "chatgpt · 2.9 MB of 5.2 MB" when chatgpt is 682 MB).
 
-**The fix — structured, keyed download tracking.** Instead of emulating a terminal, BrewBar now parses each parallel-queue line into a keyed `DownloadEntry` (name → received/total bytes) and rebuilds the block from its own state. `BrewModel.downloads` is an insertion-ordered collection; `detectDownload` upserts entries by package name, so every row always pairs the right name with the right bytes — no stacking, no mismatch. A completed entry is marked done (kept at 100%) and the whole block stays until **every** download finishes, then commits a text snapshot into the log and clears so the install phase continues normally.
+**The fix — structured, keyed download tracking.** Instead of emulating a terminal, KegPilot now parses each parallel-queue line into a keyed `DownloadEntry` (name → received/total bytes) and rebuilds the block from its own state. `BrewModel.downloads` is an insertion-ordered collection; `detectDownload` upserts entries by package name, so every row always pairs the right name with the right bytes — no stacking, no mismatch. A completed entry is marked done (kept at 100%) and the whole block stays until **every** download finishes, then commits a text snapshot into the log and clears so the install phase continues normally.
 
 **The UI — pinned live block.** The old single `DownloadProgressBar` is replaced by `LiveDownloads`, rendered *outside* the scrolling console (between it and the toolbar). It shows a header (`Downloading N items` · `x/N done`) and one row per package: a green check when done, the name, an inline mini progress bar (green at 100%), and brew's byte counter. Because it's pinned outside the scroll area, download progress stays visible regardless of the Follow toggle, and it scales to any concurrency. The HEAD size-lookup request was removed (brew's own byte counts are authoritative). Copy now includes a snapshot of the live block.
 
@@ -372,7 +372,7 @@ Two fixes to the v1.22 Brewfile feature.
 
 **Export no longer passes the disabled `--describe` switch.** `brew bundle dump --force --describe` failed on current Homebrew (7.x) with `Error: Calling the '--describe' switch is disabled! Use the default behaviour instead.` — the switch was removed and description comments are now the default. Export now runs `brew bundle dump --force --file=<path>` (descriptions still included). Added a test that pins the exact dump arguments and asserts `--describe` is never passed.
 
-**Save/Open panels now open in front.** The Export save panel and Restore open panel could appear *behind* the BrewBar window. A `MenuBarExtra(.window)` app (LSUIElement) isn't "active" like a normal app, so a freshly created `NSSavePanel`/`NSOpenPanel` wasn't brought forward. Both panels now call `NSApplication.shared.activate(ignoringOtherApps:)` and raise the panel to `.modalPanel` level immediately before `runModal()`, so they appear on top.
+**Save/Open panels now open in front.** The Export save panel and Restore open panel could appear *behind* the KegPilot window. A `MenuBarExtra(.window)` app (LSUIElement) isn't "active" like a normal app, so a freshly created `NSSavePanel`/`NSOpenPanel` wasn't brought forward. Both panels now call `NSApplication.shared.activate(ignoringOtherApps:)` and raise the panel to `.modalPanel` level immediately before `runModal()`, so they appear on top.
 
 Optimized arm64 build verified; the built bundle reports version 1.23 (build 25).
 
@@ -380,7 +380,7 @@ Optimized arm64 build verified; the built bundle reports version 1.23 (build 25)
 
 Three features in one release.
 
-**Menu-bar update badge.** BrewBar now checks for outdated packages in the background — once about 8 seconds after launch, then every 6 hours — and shows the count in the menu-bar label ("BrewBar — 3 updates") plus a small amber dot composited onto the Terminal-Mug glyph. The background check runs on its own `CommandRunner` (never through `execute`), so it never writes to the console, never toggles `busy`, and is skipped entirely while a foreground command is running — it can't collide with anything you do. `updateCount` is also set by the normal manual Check. Implemented as `BrewModel.backgroundCheckUpdates()` + `startBackgroundUpdateChecks()` (a launch delay + a repeating `Timer`, each hop wrapped in `Task { @MainActor }`), and `BrandImages.menuBarBadged(count:running:)` which returns the plain template glyph when there's nothing pending (so the OS still tints it) or a non-template composite with the amber dot when updates exist.
+**Menu-bar update badge.** KegPilot now checks for outdated packages in the background — once about 8 seconds after launch, then every 6 hours — and shows the count in the menu-bar label ("KegPilot — 3 updates") plus a small amber dot composited onto the Terminal-Mug glyph. The background check runs on its own `CommandRunner` (never through `execute`), so it never writes to the console, never toggles `busy`, and is skipped entirely while a foreground command is running — it can't collide with anything you do. `updateCount` is also set by the normal manual Check. Implemented as `BrewModel.backgroundCheckUpdates()` + `startBackgroundUpdateChecks()` (a launch delay + a repeating `Timer`, each hop wrapped in `Task { @MainActor }`), and `BrandImages.menuBarBadged(count:running:)` which returns the plain template glyph when there's nothing pending (so the OS still tints it) or a non-template composite with the amber dot when updates exist.
 
 **Per-package info popover.** Every package row (Installed, Search & Install, and Updates) gained an ⓘ button that opens a popover with the description, version, dependencies, install size (formulae), caveats, and a homepage link that opens in the default browser. A new pure, AppKit-free `PackageInfo` model + `PackageInfo.parse` decodes `brew info --json=v2 <token>` (formula `dependencies` + `installed[].installed_size`; cask `depends_on.formula`/`.cask`; `caveats`; a `homepageIsValid` guard that only allows http(s) URLs to be opened). `BrewModel.fetchInfo(token:kind:id:)` captures the JSON quietly to a temp file (like `refreshInstalled`, so the console isn't spammed), gated by the one-command `!busy` invariant, and drops the result if the user closed the popover meanwhile. `PackageInfoPopover` renders the loading/error/detail states.
 
@@ -400,7 +400,7 @@ Optimized arm64 build verified; the built bundle reports version 1.21 (build 23)
 
 ## Version 1.20: Recover from a leftover-app cask upgrade failure
 
-Some cask upgrades (e.g. `brew upgrade --cask whatsapp`) can fail with `Error: <token>: It seems there is already an App at '…'.` — an older `.app` from the previous version is still in place and blocks the install, so brew stops with a non-zero exit. Previously the only fix was to drop to a Terminal and re-run with `--force` by hand. BrewBar now detects this failure and offers a one-click recovery, reusing the recovery-bar infrastructure introduced in v1.19.
+Some cask upgrades (e.g. `brew upgrade --cask whatsapp`) can fail with `Error: <token>: It seems there is already an App at '…'.` — an older `.app` from the previous version is still in place and blocks the install, so brew stops with a non-zero exit. Previously the only fix was to drop to a Terminal and re-run with `--force` by hand. KegPilot now detects this failure and offers a one-click recovery, reusing the recovery-bar infrastructure introduced in v1.19.
 
 Implementation: the pure, AppKit-free `RecoveryHint` model gained a `Kind` enum (`.resumableDownload`, `.staleAppArtifact`) that drives the message, primary-button title/symbol, and recovery action. `RecoveryHintDetector` now scans for the distinctive `It seems there is already an App at` phrase and extracts the affected token from the `Error: <token>:` prefix (always a cask, since only casks carry the `.app` artifact); the resumable-download detection is unchanged and still takes its own path. On a matching non-cancelled failure, `BrewModel` publishes the hint and the console recovery bar shows **Force Retry** + **Dismiss**. `performRecovery()` (the generalized successor to `retryAfterCacheClear()`) dispatches on the hint's kind: clear-cache-then-rerun for downloads, or re-run the exact failed command with `--force` appended (fixed args, no shell interpolation) for the stale artifact — output preserved so the whole recovery story stays in one console log, with updates re-checked on success. Added stale-artifact detection tests (token/cask flag, force-retry action, false-positive guard) and a full flow test (fake brew fails `upgrade` with the "already an App" signature → recovery set kind `.staleAppArtifact` token `whatsapp` → `performRecovery()` re-runs with `--force` to exit 0 → recovery cleared).
 
@@ -408,9 +408,9 @@ Optimized arm64 build verified; the built bundle reports version 1.20 (build 22)
 
 ## Version 1.19: Recover from Homebrew's "cannot resume" download dead-end
 
-Some cask upgrades (e.g. `brew upgrade --cask postman`) can fail with `curl: (56) HTTP server doesn't seem to support byte ranges. Cannot resume.` — a stale partial download sits in Homebrew's cache and the CDN refuses a Range request, so brew keeps trying to resume and hits a dead-end. Previously the only fix was to drop to a Terminal and run `brew cleanup <package>` by hand. BrewBar now detects this failure and offers a one-click recovery.
+Some cask upgrades (e.g. `brew upgrade --cask postman`) can fail with `curl: (56) HTTP server doesn't seem to support byte ranges. Cannot resume.` — a stale partial download sits in Homebrew's cache and the CDN refuses a Range request, so brew keeps trying to resume and hits a dead-end. Previously the only fix was to drop to a Terminal and run `brew cleanup <package>` by hand. KegPilot now detects this failure and offers a one-click recovery.
 
-Implementation: a new pure, AppKit-free `RecoveryHint` model + `RecoveryHintDetector` scans a failed command's output for the signature — a `curl: (56)` line together with a resume phrase, or an explicit "cannot resume" / "byte ranges" phrase — and extracts the offending package token and kind (cask/formula) from brew's `Download failed on Cask 'postman'` / `Formula 'wget'` line. The detector requires the resume signature specifically, so unrelated curl-56 errors (connection reset, etc.) are **not** offered a cache-clear (a false-positive guard). On a real (non-cancelled) failure whose output matches, `BrewModel` publishes a `recovery` hint; `BrewBarApp` shows a warning-tinted recovery bar in the console (mirroring the `[y/n]` prompt bar) with **Clear Cache & Retry** and **Dismiss**. Retry runs `brew cleanup <token>` (fixed args, no shell interpolation; falls back to a global `brew cleanup` when brew didn't name a package), then re-runs the exact failed command with output preserved so the whole recovery story stays in one console log, and re-checks updates on success. The offer clears on a new command, Stop, or Clear. Added recovery-hint detection tests (curl-56 resume, formula/cask token extraction, byte-ranges-only phrasing, tokenless hint, false-positive guards) and a full flow test (fake resume-failing `brew upgrade` → recovery set → cache-clear + re-run to exit 0 → recovery cleared).
+Implementation: a new pure, AppKit-free `RecoveryHint` model + `RecoveryHintDetector` scans a failed command's output for the signature — a `curl: (56)` line together with a resume phrase, or an explicit "cannot resume" / "byte ranges" phrase — and extracts the offending package token and kind (cask/formula) from brew's `Download failed on Cask 'postman'` / `Formula 'wget'` line. The detector requires the resume signature specifically, so unrelated curl-56 errors (connection reset, etc.) are **not** offered a cache-clear (a false-positive guard). On a real (non-cancelled) failure whose output matches, `BrewModel` publishes a `recovery` hint; `KegPilotApp` shows a warning-tinted recovery bar in the console (mirroring the `[y/n]` prompt bar) with **Clear Cache & Retry** and **Dismiss**. Retry runs `brew cleanup <token>` (fixed args, no shell interpolation; falls back to a global `brew cleanup` when brew didn't name a package), then re-runs the exact failed command with output preserved so the whole recovery story stays in one console log, and re-checks updates on success. The offer clears on a new command, Stop, or Clear. Added recovery-hint detection tests (curl-56 resume, formula/cask token extraction, byte-ranges-only phrasing, tokenless hint, false-positive guards) and a full flow test (fake resume-failing `brew upgrade` → recovery set → cache-clear + re-run to exit 0 → recovery cleared).
 
 Optimized arm64 build verified; the built bundle reports version 1.19 (build 21).
 

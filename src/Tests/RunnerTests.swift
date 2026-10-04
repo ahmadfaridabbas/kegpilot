@@ -321,19 +321,19 @@ import Darwin
         precondition(!AppUpdate.isNewer("garbage", than: "1.25"), "unparseable candidate fails safe")
         precondition(!AppUpdate.isNewer("1.26", than: "garbage"), "unparseable current fails safe")
         // tag_name extraction from a GitHub releases/latest payload.
-        let relJSON = Data(#"{"tag_name":"v1.26","name":"BrewBar 1.26","draft":false}"#.utf8)
+        let relJSON = Data(#"{"tag_name":"v1.26","name":"KegPilot 1.26","draft":false}"#.utf8)
         precondition(AppUpdate.tagName(fromLatestReleaseJSON: relJSON) == "v1.26")
         precondition(AppUpdate.displayVersion(fromTag: "v1.26") == "1.26")
         precondition(AppUpdate.tagName(fromLatestReleaseJSON: Data("{}".utf8)) == nil, "missing tag → nil")
         // Phase 2: checksum parsing + asset URL extraction + asset filename.
-        let sums = AppUpdate.parseChecksums("abc123\n" + String(repeating: "a", count: 64) + "  BrewBar-1.27.zip\n")
-        precondition(sums["BrewBar-1.27.zip"] == String(repeating: "a", count: 64), "checksum line should parse")
+        let sums = AppUpdate.parseChecksums("abc123\n" + String(repeating: "a", count: 64) + "  KegPilot-1.27.zip\n")
+        precondition(sums["KegPilot-1.27.zip"] == String(repeating: "a", count: 64), "checksum line should parse")
         precondition(AppUpdate.parseChecksums("nothex  X.zip").isEmpty, "non-64-hex should be ignored")
-        precondition(AppUpdate.assetFileName(forTag: "v1.27") == "BrewBar-1.27.zip")
-        let relWithAsset = Data(#"{"tag_name":"v1.27","assets":[{"name":"BrewBar-1.27.zip","browser_download_url":"https://example.invalid/BrewBar-1.27.zip"}]}"#.utf8)
-        precondition(AppUpdate.zipAssetURL(fromLatestReleaseJSON: relWithAsset)?.absoluteString == "https://example.invalid/BrewBar-1.27.zip")
+        precondition(AppUpdate.assetFileName(forTag: "v1.27") == "KegPilot-1.27.zip")
+        let relWithAsset = Data(#"{"tag_name":"v1.27","assets":[{"name":"KegPilot-1.27.zip","browser_download_url":"https://example.invalid/KegPilot-1.27.zip"}]}"#.utf8)
+        precondition(AppUpdate.zipAssetURL(fromLatestReleaseJSON: relWithAsset)?.absoluteString == "https://example.invalid/KegPilot-1.27.zip")
         precondition(AppUpdate.zipAssetURL(fromLatestReleaseJSON: Data(#"{"assets":[]}"#.utf8)) == nil, "no zip asset → nil")
-        precondition(AppUpdate.fallbackZipURL(tag: "v1.27")?.absoluteString == "https://github.com/ahmadfaridabbas/brewbar/releases/download/v1.27/BrewBar-1.27.zip")
+        precondition(AppUpdate.fallbackZipURL(tag: "v1.27")?.absoluteString == "https://github.com/ahmadfaridabbas/kegpilot/releases/download/v1.27/KegPilot-1.27.zip")
         print("PASS: app update version compare, tag parse, and fail-safe guards")
 
         // RecoveryHint: a resumable-download dead-end (curl-56 / "Cannot resume") is detected and the

@@ -1,6 +1,6 @@
 import Foundation
 
-/// A recoverable failure that BrewBar can offer to fix with one click. Two flavours are covered:
+/// A recoverable failure that KegPilot can offer to fix with one click. Two flavours are covered:
 ///
 /// 1. `.resumableDownload` — Homebrew's "resumable download" dead-end: when a partial file is left
 ///    in brew's download cache and the file's HTTP server does not honour byte-range (resume)

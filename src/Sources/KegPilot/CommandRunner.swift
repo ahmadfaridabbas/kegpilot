@@ -163,7 +163,7 @@ struct BrewEnvironment {
         env["HOMEBREW_NO_ENV_HINTS"] = "1"
         env["NONINTERACTIVE"] = "1"
         // NOTE: we intentionally do NOT set HOMEBREW_NO_ASK. Homebrew 7+ defaults `brew upgrade`/
-        // `install` to "ask mode" (a `Do you want to proceed? [y/n]` confirmation). BrewBar keeps
+        // `install` to "ask mode" (a `Do you want to proceed? [y/n]` confirmation). KegPilot keeps
         // that prompt and answers it interactively: the console detects the prompt and shows Yes/No
         // buttons that write a single `y`/`n` byte to the command's PTY (see CommandRunner.send).
         // Let Homebrew use its parallel download queue (the default). It redraws a status line with

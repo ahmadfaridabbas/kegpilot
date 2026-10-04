@@ -2,9 +2,9 @@
 
 This repository contains the app source, interface renders, website, and a ready-to-download app ZIP.
 
-Repository: https://github.com/ahmadfaridabbas/brewbar
+Repository: https://github.com/ahmadfaridabbas/kegpilot
 
-Website: https://ahmadfaridabbas.github.io/brewbar/
+Website: https://brewbar.netlify.app/
 
 ## 1. Upload to GitHub
 
@@ -12,7 +12,7 @@ Website: https://ahmadfaridabbas.github.io/brewbar/
 2. Upload the **contents** of this folder into the repository root, including `src/` and `docs/`.
 3. Commit the files to your default branch, usually `main`.
 
-The `src/build/` output is a local build artifact and does not need to be uploaded. The installable version is already included at `docs/downloads/BrewBar-2.1.zip`, which preserves the macOS bundle and executable permissions. Include `docs/.nojekyll` so GitHub Pages serves the files as-is.
+The `src/build/` output is a local build artifact and does not need to be uploaded. The installable version is already included at `docs/downloads/KegPilot-2.1.zip`, which preserves the macOS bundle and executable permissions. Include `docs/.nojekyll` so GitHub Pages serves the files as-is.
 
 ## 2. Enable GitHub Pages
 
@@ -28,13 +28,13 @@ Official instructions: https://docs.github.com/en/pages/getting-started-with-git
 
 ## 3. Optional GitHub Release
 
-Create a release tagged `v2.1` and attach `docs/downloads/BrewBar-2.1.zip`. The website's download button already points at its bundled ZIP, so a Release is optional.
+Create a release tagged `v2.1` and attach `docs/downloads/KegPilot-2.1.zip`. The website's download button already points at its bundled ZIP, so a Release is optional.
 
 ## Updating
 
 Edit the source in `src/`, run `./build.sh`, and regenerate the interface renders with `swift Design/RenderSite.swift ../../brewbar-site/docs/assets` (or your `docs/assets` path) if the appearance changes. For a version change, update `src/Info.plist`, the ZIP name/link in `docs/index.html` and `README.md`, and the visible version text. GitHub Pages republishes changes to `docs/` automatically once configured.
 
-BrewBar is not affiliated with Homebrew. Third-party status is documented in `THIRD_PARTY_NOTICES.md`.
+KegPilot is not affiliated with Homebrew. Third-party status is documented in `THIRD_PARTY_NOTICES.md`.
 
 ## SEO
 
@@ -48,4 +48,4 @@ The site is optimized for discovery with on-page SEO in `docs/`:
 
 Target keywords are the app's realistic high-intent queries — "Homebrew GUI", "Homebrew GUI Mac", "Homebrew menu bar app", "manage Homebrew updates", "Homebrew without Terminal" — not the ultra-competitive bare term "homebrew".
 
-After deploying, submit the site in **Google Search Console** (https://search.google.com/search-console): add the URL-prefix property `https://ahmadfaridabbas.github.io/brewbar/`, verify via the HTML-tag or Google Analytics method, then submit `sitemap.xml` under **Sitemaps** and use **URL Inspection → Request indexing** for the home page. Optionally do the same in **Bing Webmaster Tools**. Validate structured data with Google's Rich Results Test.
+After deploying, submit the site in **Google Search Console** (https://search.google.com/search-console): add the URL-prefix property `https://brewbar.netlify.app/`, verify via the HTML-tag or Google Analytics method, then submit `sitemap.xml` under **Sitemaps** and use **URL Inspection → Request indexing** for the home page. Optionally do the same in **Bing Webmaster Tools**. Validate structured data with Google's Rich Results Test.

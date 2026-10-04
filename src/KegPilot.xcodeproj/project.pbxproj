@@ -1,6 +1,6 @@
 // !$*UTF8*$!
 { archiveVersion = 1; classes = {}; objectVersion = 56; objects = {
-00000000000000000000000A = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewBarApp.swift; sourceTree = "<group>"; };
+00000000000000000000000A = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KegPilotApp.swift; sourceTree = "<group>"; };
 000000000000000000000014 = { isa = PBXBuildFile; fileRef = 00000000000000000000000A; };
 00000000000000000000000B = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrewModel.swift; sourceTree = "<group>"; };
 000000000000000000000015 = { isa = PBXBuildFile; fileRef = 00000000000000000000000B; };
@@ -8,12 +8,12 @@
 000000000000000000000016 = { isa = PBXBuildFile; fileRef = 00000000000000000000000C; };
 000000000000000000000001 = { isa = PBXProject; attributes = { LastUpgradeCheck = 1600; }; buildConfigurationList = 000000000000000000000028; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; knownRegions = (en, Base); mainGroup = 000000000000000000000002; productRefGroup = 000000000000000000000004; projectDirPath = ""; projectRoot = ""; targets = (000000000000000000000005); };
 000000000000000000000002 = { isa = PBXGroup; children = (000000000000000000000003, 000000000000000000000004, 000000000000000000000009, 000000000000000000000050); sourceTree = "<group>"; };
-000000000000000000000003 = { isa = PBXGroup; children = (00000000000000000000000A,00000000000000000000000B,00000000000000000000000C, 000000000000000000000060, 000000000000000000000061, 000000000000000000000070, 000000000000000000000071); path = Sources/BrewBar; sourceTree = "<group>"; };
+000000000000000000000003 = { isa = PBXGroup; children = (00000000000000000000000A,00000000000000000000000B,00000000000000000000000C, 000000000000000000000060, 000000000000000000000061, 000000000000000000000070, 000000000000000000000071); path = Sources/KegPilot; sourceTree = "<group>"; };
 000000000000000000000004 = { isa = PBXGroup; children = (000000000000000000000008); name = Products; sourceTree = "<group>"; };
-000000000000000000000005 = { isa = PBXNativeTarget; buildConfigurationList = 000000000000000000000029; buildPhases = (000000000000000000000006, 000000000000000000000007, 000000000000000000000051); buildRules = (); dependencies = (); name = BrewBar; productName = BrewBar; productReference = 000000000000000000000008; productType = "com.apple.product-type.application"; };
+000000000000000000000005 = { isa = PBXNativeTarget; buildConfigurationList = 000000000000000000000029; buildPhases = (000000000000000000000006, 000000000000000000000007, 000000000000000000000051); buildRules = (); dependencies = (); name = KegPilot; productName = KegPilot; productReference = 000000000000000000000008; productType = "com.apple.product-type.application"; };
 000000000000000000000006 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (000000000000000000000014,000000000000000000000015,000000000000000000000016, 000000000000000000000062, 000000000000000000000063, 000000000000000000000072, 000000000000000000000073); runOnlyForDeploymentPostprocessing = 0; };
 000000000000000000000007 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-000000000000000000000008 = { isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BrewBar.app; sourceTree = BUILT_PRODUCTS_DIR; };
+000000000000000000000008 = { isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KegPilot.app; sourceTree = BUILT_PRODUCTS_DIR; };
 000000000000000000000009 = { isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 000000000000000000000028 = { isa = XCConfigurationList; buildConfigurations = (00000000000000000000002A, 00000000000000000000002B); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 000000000000000000000029 = { isa = XCConfigurationList; buildConfigurations = (00000000000000000000002C, 00000000000000000000002D); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };

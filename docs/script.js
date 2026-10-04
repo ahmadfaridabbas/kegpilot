@@ -1,10 +1,10 @@
 const image = document.querySelector('#view-image');
 const nameLabel = document.querySelector('#view-name');
 const viewAlt = {
-  maintenance: 'BrewBar Maintenance tab with the two-column action grid',
-  installed: 'BrewBar Installed tab listing formulae and casks with search and uninstall',
-  updates: 'BrewBar Updates tab with installed to current versions and upgrade buttons',
-  console: 'BrewBar Console streaming live output from a running command'
+  maintenance: 'KegPilot Maintenance tab with the two-column action grid',
+  installed: 'KegPilot Installed tab listing formulae and casks with search and uninstall',
+  updates: 'KegPilot Updates tab with installed to current versions and upgrade buttons',
+  console: 'KegPilot Console streaming live output from a running command'
 };
 for (const button of document.querySelectorAll('[data-view]')) {
   button.addEventListener('click', () => {

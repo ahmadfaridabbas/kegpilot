@@ -1,14 +1,14 @@
-# BrewBar
+# KegPilot
 
 A native SwiftUI menu-bar app for **Homebrew** on Apple Silicon, macOS 13 Ventura or newer. Run maintenance, browse installed packages, and manage updates from the menu bar with a live command console — no Terminal required.
 
-**[Website & gallery](https://ahmadfaridabbas.github.io/brewbar/)** · **[Download](https://github.com/ahmadfaridabbas/brewbar/releases/latest)** · macOS 13+ · Apple Silicon
+**[Website & gallery](https://brewbar.netlify.app/)** · **[Download](https://github.com/ahmadfaridabbas/kegpilot/releases/latest)** · macOS 13+ · Apple Silicon
 
-![BrewBar maintenance dashboard in dark mode](docs/assets/hero.png)
+![KegPilot maintenance dashboard in dark mode](docs/assets/hero.png)
 
 ## 🔒 Your password is never stored
 
-Some casks (like Zoom) run a `.pkg` installer that needs administrator rights. When Homebrew asks for your Mac password, BrewBar prompts you securely and passes it **straight to macOS `sudo`**. Your password is **never saved, never logged, never written to disk, never stored in the Keychain, never placed in command arguments or environment variables, and never sent over the network.** It is held in memory for a single Homebrew command, then discarded.
+Some casks (like Zoom) run a `.pkg` installer that needs administrator rights. When Homebrew asks for your Mac password, KegPilot prompts you securely and passes it **straight to macOS `sudo`**. Your password is **never saved, never logged, never written to disk, never stored in the Keychain, never placed in command arguments or environment variables, and never sent over the network.** It is held in memory for a single Homebrew command, then discarded.
 
 <details>
 <summary><b>Details — how it works, for the technically curious</b></summary>
@@ -31,7 +31,7 @@ Some casks (like Zoom) run a `.pkg` installer that needs administrator rights. W
 
 **Honest caveats**
 
-Swift strings aren't guaranteed to be zeroed by the runtime, so a transient copy may briefly remain in freed memory until reused — the same practical limit every GUI `sudo` front-end has. BrewBar best-effort zeroes its own byte buffer after use and holds the value only for one command. The entire mechanism is open source in [`src/Sources/BrewBar/AskpassBroker.swift`](src/Sources/BrewBar/AskpassBroker.swift), so you can read exactly what it does.
+Swift strings aren't guaranteed to be zeroed by the runtime, so a transient copy may briefly remain in freed memory until reused — the same practical limit every GUI `sudo` front-end has. KegPilot best-effort zeroes its own byte buffer after use and holds the value only for one command. The entire mechanism is open source in [`src/Sources/KegPilot/AskpassBroker.swift`](src/Sources/KegPilot/AskpassBroker.swift), so you can read exactly what it does.
 
 </details>
 
@@ -48,29 +48,29 @@ Everything lives in one menu-bar window:
 - **Updates** — See installed → current versions from `brew outdated`, and upgrade individually or all at once. Pinned packages are labeled.
 - **Console** — Merged stdout/stderr in arrival order, timestamps, duration, and the real exit code. Stop escalates SIGINT → SIGTERM → SIGKILL.
 
-Gallery images are native offscreen renders of BrewBar's interface, produced from its drawing code — not screen captures.
+Gallery images are native offscreen renders of KegPilot's interface, produced from its drawing code — not screen captures.
 
 ## Features
 
 - Native SwiftUI `MenuBarExtra` panel with no Dock icon.
 - **Search & Install:** search all of Homebrew from the Installed tab — each result shows its description, version, and installed-state — and install formulae or casks with a confirmation. The installed list refreshes automatically.
 - System / Light / Dark plus **Papery Light** and **Papery Dark** themes, saved across launches, with matching artwork.
-- A visible version line and Close / Quit controls in the header. Close tucks the panel away while BrewBar stays in the menu bar; Quit is blocked while a command is running.
+- A visible version line and Close / Quit controls in the header. Close tucks the panel away while KegPilot stays in the menu bar; Quit is blocked while a command is running.
 - Live, streaming, noninteractive console with bounded retention, Copy, Clear, and Follow.
 - Locates `brew` from your login environment and shows the resolved path.
 
 ## Install
 
-1. Download and extract [BrewBar-2.1.zip](docs/downloads/BrewBar-2.1.zip).
-2. Drag `BrewBar.app` to your Applications folder.
-3. Because BrewBar is open source and not notarized by Apple, macOS quarantines it on download. Run this once in Terminal to let it launch:
+1. Download and extract [KegPilot-2.1.zip](docs/downloads/KegPilot-2.1.zip).
+2. Drag `KegPilot.app` to your Applications folder.
+3. Because KegPilot is open source and not notarized by Apple, macOS quarantines it on download. Run this once in Terminal to let it launch:
 
    ```sh
-   xattr -dr com.apple.quarantine /Applications/BrewBar.app
+   xattr -dr com.apple.quarantine /Applications/KegPilot.app
    ```
 4. Click the Terminal Mug glyph in the menu bar to open the panel.
 
-This is a locally (ad-hoc) signed build, not Apple-notarized. The command above clears macOS's quarantine flag so the app opens cleanly; alternatively you can right-click → Open the first time or approve it in Privacy & Security. BrewBar requires an existing Homebrew installation at `/opt/homebrew`.
+This is a locally (ad-hoc) signed build, not Apple-notarized. The command above clears macOS's quarantine flag so the app opens cleanly; alternatively you can right-click → Open the first time or approve it in Privacy & Security. KegPilot requires an existing Homebrew installation at `/opt/homebrew`.
 
 ## Publishing
 
@@ -78,6 +78,6 @@ See [PUBLISHING.md](PUBLISHING.md) for how the repository and website are struct
 
 ## Status & licensing
 
-BrewBar is an independent project and is not affiliated with or endorsed by Homebrew. It runs the `brew` binary already installed on your Mac. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+KegPilot is an independent project and is not affiliated with or endorsed by Homebrew. It runs the `brew` binary already installed on your Mac. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-BrewBar is released under the [MIT License](LICENSE). Copyright (c) 2026 Ahmad Farid Abbas.
+KegPilot is released under the [MIT License](LICENSE). Copyright (c) 2026 Ahmad Farid Abbas.

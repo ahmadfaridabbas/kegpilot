@@ -7,7 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard model?.busy == true else { return .terminateNow }
         let alert = NSAlert()
         alert.messageText = "Homebrew is still running"
-        alert.informativeText = "Use Stop in BrewBar and wait for the command to finish before quitting."
+        alert.informativeText = "Use Stop in KegPilot and wait for the command to finish before quitting."
         alert.addButton(withTitle: "Keep Running")
         alert.runModal()
         return .terminateCancel
@@ -44,7 +44,7 @@ enum BrandImages {
     static let menuBar: NSImage = {
         guard let url = Bundle.main.url(forResource: "MenuBarTemplate", withExtension: "png"),
               let image = NSImage(contentsOf: url) else {
-            return NSImage(systemSymbolName: "cup.and.saucer.fill", accessibilityDescription: "BrewBar")!
+            return NSImage(systemSymbolName: "cup.and.saucer.fill", accessibilityDescription: "KegPilot")!
         }
         if let retinaURL = Bundle.main.url(forResource: "MenuBarTemplate@2x", withExtension: "png"),
            let data = try? Data(contentsOf: retinaURL),
@@ -92,7 +92,7 @@ enum BrandImages {
     }
 }
 
-@main struct BrewBarApp: App {
+@main struct KegPilotApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     @StateObject private var model = BrewModel()
     var body: some Scene {
@@ -111,9 +111,9 @@ enum BrandImages {
 
     /// The menu-bar label text: shows a running state, else an update count when any are pending.
     private var menuBarTitle: String {
-        if model.busy { return "BrewBar — Running" }
-        if model.updateCount > 0 { return "BrewBar — \(model.updateCount) update\(model.updateCount == 1 ? "" : "s")" }
-        return "BrewBar"
+        if model.busy { return "KegPilot — Running" }
+        if model.updateCount > 0 { return "KegPilot — \(model.updateCount) update\(model.updateCount == 1 ? "" : "s")" }
+        return "KegPilot"
     }
 }
 
@@ -137,8 +137,8 @@ struct Dashboard: View {
                 Image(nsImage: BrandImages.icon(dark: colorScheme == .dark)).resizable().interpolation(.high)
                     .frame(width: 54, height: 54).accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("BrewBar").font(.system(size: 22, weight: .semibold, design: .rounded)).foregroundStyle(theme.text)
-                    Text("A little care for your Homebrew.").foregroundStyle(theme.secondaryText)
+                    Text("KegPilot").font(.system(size: 22, weight: .semibold, design: .rounded)).foregroundStyle(theme.text)
+                    Text("Homebrew from your menu bar.").foregroundStyle(theme.secondaryText)
                     Text(AppInfo.versionString)
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(theme.tertiaryText)
@@ -152,7 +152,7 @@ struct Dashboard: View {
                         .padding(.horizontal, 7).padding(.vertical, 2)
                         .background(theme.accent.opacity(0.15), in: Capsule())
                         .foregroundStyle(theme.accent)
-                        .accessibilityLabel("Updating BrewBar, \(Int(model.updateInstallProgress * 100)) percent")
+                        .accessibilityLabel("Updating KegPilot, \(Int(model.updateInstallProgress * 100)) percent")
                     } else if model.appUpdateAvailable, let latest = model.latestAppVersion {
                         Button { model.installUpdate() } label: {
                             HStack(spacing: 4) {
@@ -165,8 +165,8 @@ struct Dashboard: View {
                             .foregroundStyle(theme.accent)
                         }
                         .buttonStyle(.plain)
-                        .help("Download and install BrewBar \(latest), then relaunch")
-                        .accessibilityLabel("Update to BrewBar \(latest). Downloads, installs, and relaunches.")
+                        .help("Download and install KegPilot \(latest), then relaunch")
+                        .accessibilityLabel("Update to KegPilot \(latest). Downloads, installs, and relaunches.")
                     }
                 }
                 Spacer()
@@ -194,7 +194,7 @@ struct Dashboard: View {
                 .buttonStyle(.bordered)
                 .controlSize(.small)
                 .fixedSize()
-                .help("BrewBar options")
+                .help("KegPilot options")
                 Button {
                     dismiss()
                 } label: {
@@ -202,7 +202,7 @@ struct Dashboard: View {
                 }
                 .buttonStyle(.bordered).controlSize(.small)
                 .keyboardShortcut("w")
-                .help("Close this panel; BrewBar stays in the menu bar")
+                .help("Close this panel; KegPilot stays in the menu bar")
                 .accessibilityLabel("Close panel")
                 Button(role: .destructive) {
                     NSApp.terminate(nil)
@@ -212,8 +212,8 @@ struct Dashboard: View {
                 .buttonStyle(.bordered).controlSize(.small)
                 .keyboardShortcut("q")
                 .disabled(model.busy)
-                .help(model.busy ? "Stop the running command before quitting" : "Quit BrewBar")
-                .accessibilityLabel("Quit BrewBar")
+                .help(model.busy ? "Stop the running command before quitting" : "Quit KegPilot")
+                .accessibilityLabel("Quit KegPilot")
             }
             HStack(spacing: 10) {
                 Label("Appearance", systemImage: appearanceIcon)

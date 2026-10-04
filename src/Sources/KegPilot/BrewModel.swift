@@ -117,7 +117,7 @@ struct BrewAction: Identifiable {
     @Published var promptText = ""
     /// True while the running command is blocked on `sudo`'s admin-password prompt — a cask whose
     /// payload runs `/usr/sbin/installer -pkg` (e.g. `zoom`). The console then shows a secure
-    /// password field wired to `submitPassword(_:)` / `cancelPassword()`. The password BrewBar
+    /// password field wired to `submitPassword(_:)` / `cancelPassword()`. The password KegPilot
     /// collects is handed to sudo through `AskpassBroker` (an in-memory → FIFO channel; it never
     /// touches argv, env, or a regular file). Set from the broker's request watcher.
     @Published var awaitingPassword = false
@@ -142,7 +142,7 @@ struct BrewAction: Identifiable {
     /// `####  NN.N%`), used when brew isn't reporting named byte counters. Rendered as one entry in
     /// the same block. Nil when the parallel byte-counter path is driving the block.
     private var singleDownloadName: String?
-    /// A recoverable failure BrewBar can offer to fix with one click (currently: a resumable-download
+    /// A recoverable failure KegPilot can offer to fix with one click (currently: a resumable-download
     /// dead-end where a stale partial file in brew's cache can't be resumed). Set when a command
     /// fails with the matching signature; cleared when a new command runs, on Stop, or on Clear.
     @Published var recovery: RecoveryHint?
@@ -306,7 +306,7 @@ struct BrewAction: Identifiable {
     func refreshInstalled() {
         guard ready, !busy else { return }
         loadingInventory = true; inventoryError = nil
-        let file = FileManager.default.temporaryDirectory.appendingPathComponent("BrewBar-\(UUID().uuidString).json")
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("KegPilot-\(UUID().uuidString).json")
         execute(arguments: ["info", "--json=v2", "--installed"], standardOutputFile: file) { [weak self] code, cancelled in
             defer { try? FileManager.default.removeItem(at: file) }
             guard let self = self else { return }
@@ -362,7 +362,7 @@ struct BrewAction: Identifiable {
         // through to a fuzzy match and return unrelated packages. Search on the single most
         // distinctive word, then filter the enriched results by the full query (see enrich).
         let searchTerm = SearchResult.distinctiveTerm(query) ?? query
-        let file = FileManager.default.temporaryDirectory.appendingPathComponent("BrewBar-search-\(UUID().uuidString).txt")
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("KegPilot-search-\(UUID().uuidString).txt")
         execute(arguments: ["search", searchTerm], standardOutputFile: file) { [weak self] code, cancelled in
             guard let self = self else { return }
             defer { try? FileManager.default.removeItem(at: file) }
@@ -384,7 +384,7 @@ struct BrewAction: Identifiable {
 
     /// Second stage: `brew info --json=v2 <tokens>` → rich SearchResults.
     private func enrich(tokens: [String], query: String) {
-        let file = FileManager.default.temporaryDirectory.appendingPathComponent("BrewBar-info-\(UUID().uuidString).json")
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("KegPilot-info-\(UUID().uuidString).json")
         execute(arguments: ["info", "--json=v2"] + tokens, standardOutputFile: file, preserveOutput: true) { [weak self] code, cancelled in
             guard let self = self else { return }
             defer { try? FileManager.default.removeItem(at: file) }
@@ -436,7 +436,7 @@ struct BrewAction: Identifiable {
     func checkUpdates(preserveOutput: Bool = false) {
         guard ready, !busy else { return }
         checkingUpdates = true; updatesError = nil
-        let file = FileManager.default.temporaryDirectory.appendingPathComponent("BrewBar-updates-\(UUID().uuidString).json")
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("KegPilot-updates-\(UUID().uuidString).json")
         execute(arguments: ["outdated", "--json=v2"], standardOutputFile: file, preserveOutput: preserveOutput) { [weak self] code, cancelled in
             defer { try? FileManager.default.removeItem(at: file) }
             guard let self = self else { return }
@@ -882,7 +882,7 @@ struct BrewAction: Identifiable {
     /// its structured fields. `preserveOutput: true` keeps the plain-text info visible in the log.
     private func loadInfoDetail(token: String, flag: String, id: String) {
         guard ready, !busy else { infoLoading = false; return }
-        let file = FileManager.default.temporaryDirectory.appendingPathComponent("BrewBar-pkginfo-\(UUID().uuidString).json")
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("KegPilot-pkginfo-\(UUID().uuidString).json")
         execute(arguments: ["info", "--json=v2", flag, token], standardOutputFile: file, preserveOutput: true) { [weak self] code, cancelled in
             defer { try? FileManager.default.removeItem(at: file) }
             guard let self = self else { return }
@@ -914,7 +914,7 @@ struct BrewAction: Identifiable {
     func backgroundCheckUpdates() {
         guard ready, !busy, brewPath != nil, backgroundChecker == nil else { return }
         guard let path = brewPath else { return }
-        let file = FileManager.default.temporaryDirectory.appendingPathComponent("BrewBar-bg-\(UUID().uuidString).json")
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("KegPilot-bg-\(UUID().uuidString).json")
         let checker = CommandRunner(); backgroundChecker = checker
         checker.run(executable: path, arguments: ["outdated", "--json=v2"], environment: environment,
                     standardOutputFile: file, usePTY: false) { _ in
@@ -942,7 +942,7 @@ struct BrewAction: Identifiable {
         DispatchQueue.main.asyncAfter(deadline: .now() + 8) { [weak self] in
             Task { @MainActor in self?.backgroundCheckUpdates() }
         }
-        // Check for a new BrewBar release shortly after launch too (independent of Homebrew).
+        // Check for a new KegPilot release shortly after launch too (independent of Homebrew).
         DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
             Task { @MainActor in self?.checkForAppUpdate() }
         }
@@ -955,7 +955,7 @@ struct BrewAction: Identifiable {
     /// The GitHub release check task, kept so a manual check won't stack concurrent requests.
     private var appUpdateTask: URLSessionDataTask?
 
-    /// Check GitHub Releases for a newer BrewBar and update the Phase-1 state. `manual` shows
+    /// Check GitHub Releases for a newer KegPilot and update the Phase-1 state. `manual` shows
     /// transient feedback in the Options menu ("You're up to date." / an error); the silent
     /// background check leaves `appUpdateStatus` untouched on the up-to-date/failure paths so it
     /// never nags. Never blocks the UI (async URLSession), and fails safe: any error leaves
@@ -992,8 +992,8 @@ struct BrewAction: Identifiable {
                     self.pendingUpdateURL = AppUpdate.zipAssetURL(fromLatestReleaseJSON: data)
                         ?? AppUpdate.fallbackZipURL(tag: tag)
                     if manual {
-                        self.appUpdateStatus = "BrewBar \(latest) is available."
-                        self.logAppUpdate("Update available: BrewBar \(latest) (latest release \(tag)). Use “Update to \(latest)” to download and install it automatically.")
+                        self.appUpdateStatus = "KegPilot \(latest) is available."
+                        self.logAppUpdate("Update available: KegPilot \(latest) (latest release \(tag)). Use “Update to \(latest)” to download and install it automatically.")
                     }
                 } else {
                     self.appUpdateAvailable = false
@@ -1002,7 +1002,7 @@ struct BrewAction: Identifiable {
                     self.pendingUpdateURL = nil
                     if manual {
                         self.appUpdateStatus = "You're up to date."
-                        self.logAppUpdate("You're up to date — BrewBar \(current) is the latest release.")
+                        self.logAppUpdate("You're up to date — KegPilot \(current) is the latest release.")
                     }
                 }
             }
@@ -1019,14 +1019,14 @@ struct BrewAction: Identifiable {
 
     /// One-click self-update (Phase 2). Downloads the resolved release ZIP, verifies its SHA-256
     /// against the published `SHA256SUMS.txt`, unzips it, clears the quarantine flag, then launches
-    /// a detached helper that waits for BrewBar to quit, swaps the bundle in place, and relaunches.
+    /// a detached helper that waits for KegPilot to quit, swaps the bundle in place, and relaunches.
     /// Fail-safe: any download/verify/unzip error aborts and leaves the installed app untouched.
     /// No Developer ID / notarization needed — the helper clears quarantine and re-signs ad-hoc.
     func installUpdate() {
         guard !installingUpdate, let url = pendingUpdateURL, let tag = pendingUpdateTag else { return }
         installingUpdate = true; updateInstallProgress = 0; updateInstallStage = "Downloading…"
         let version = AppUpdate.displayVersion(fromTag: tag)
-        logAppUpdate("Starting update to BrewBar \(version)…")
+        logAppUpdate("Starting update to KegPilot \(version)…")
 
         let session = URLSession(configuration: .default)
         let task = session.downloadTask(with: url) { [weak self] tempURL, response, error in
@@ -1035,7 +1035,7 @@ struct BrewAction: Identifiable {
             if let tempURL = tempURL, error == nil,
                (response as? HTTPURLResponse).map({ $0.statusCode == 200 }) ?? true {
                 let dest = FileManager.default.temporaryDirectory
-                    .appendingPathComponent("BrewBar-update-\(UUID().uuidString).zip")
+                    .appendingPathComponent("KegPilot-update-\(UUID().uuidString).zip")
                 try? FileManager.default.moveItem(at: tempURL, to: dest)
                 stagedZip = dest
             }
@@ -1094,12 +1094,12 @@ struct BrewAction: Identifiable {
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
-    /// Unzip to a staging dir, locate `BrewBar.app`, clear quarantine, then launch a detached helper
-    /// that performs the in-place swap after BrewBar quits, and quit.
+    /// Unzip to a staging dir, locate `KegPilot.app`, clear quarantine, then launch a detached helper
+    /// that performs the in-place swap after KegPilot quits, and quit.
     private func unzipAndSwap(zip: URL, tag: String) async {
         updateInstallStage = "Installing…"
         let fm = FileManager.default
-        let stageDir = fm.temporaryDirectory.appendingPathComponent("BrewBar-stage-\(UUID().uuidString)")
+        let stageDir = fm.temporaryDirectory.appendingPathComponent("KegPilot-stage-\(UUID().uuidString)")
         do {
             try fm.createDirectory(at: stageDir, withIntermediateDirectories: true)
             // Use ditto to expand while preserving the bundle + code signature.
@@ -1111,9 +1111,9 @@ struct BrewAction: Identifiable {
         } catch {
             failUpdate("Could not expand the update archive. Your app is unchanged."); return
         }
-        // Find the new BrewBar.app inside the staging dir.
+        // Find the new KegPilot.app inside the staging dir.
         guard let newApp = findApp(in: stageDir) else {
-            failUpdate("The update didn't contain BrewBar.app. Your app is unchanged."); return
+            failUpdate("The update didn't contain KegPilot.app. Your app is unchanged."); return
         }
         // Clear quarantine so the swapped copy launches cleanly (ad-hoc signed distribution).
         let strip = Process()
@@ -1121,18 +1121,18 @@ struct BrewAction: Identifiable {
         strip.arguments = ["-dr", "com.apple.quarantine", newApp.path]
         try? strip.run(); strip.waitUntilExit()
 
-        let installedPath = Bundle.main.bundlePath  // e.g. /Applications/BrewBar.app
+        let installedPath = Bundle.main.bundlePath  // e.g. /Applications/KegPilot.app
         launchSwapHelper(newApp: newApp.path, installedApp: installedPath, stageDir: stageDir.path, zip: zip.path)
-        logAppUpdate("Update staged. BrewBar will quit and relaunch on \(AppUpdate.displayVersion(fromTag: tag))…")
+        logAppUpdate("Update staged. KegPilot will quit and relaunch on \(AppUpdate.displayVersion(fromTag: tag))…")
         // Give the log a beat to render, then quit so the helper can swap the bundle.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { NSApp.terminate(nil) }
     }
 
-    /// Recursively find the first `BrewBar.app` under `dir` (ditto may nest it or place it at root).
+    /// Recursively find the first `KegPilot.app` under `dir` (ditto may nest it or place it at root).
     private func findApp(in dir: URL) -> URL? {
         let fm = FileManager.default
         if let items = try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) {
-            for item in items where item.lastPathComponent == "BrewBar.app" { return item }
+            for item in items where item.lastPathComponent == "KegPilot.app" { return item }
             for item in items where item.hasDirectoryPath && item.pathExtension != "app" {
                 if let found = findApp(in: item) { return found }
             }
@@ -1141,13 +1141,13 @@ struct BrewAction: Identifiable {
     }
 
     /// Write and launch a detached shell helper that waits for this process to exit, swaps the
-    /// bundle in place (old moved aside, new moved in; rolled back on failure), relaunches BrewBar,
+    /// bundle in place (old moved aside, new moved in; rolled back on failure), relaunches KegPilot,
     /// and cleans up. Runs via `/bin/sh` fully detached so it survives our termination.
     private func launchSwapHelper(newApp: String, installedApp: String, stageDir: String, zip: String) {
         let pid = ProcessInfo.processInfo.processIdentifier
         let script = """
         #!/bin/sh
-        # Wait for BrewBar (pid \(pid)) to exit.
+        # Wait for KegPilot (pid \(pid)) to exit.
         for i in $(seq 1 100); do
           if ! kill -0 \(pid) 2>/dev/null; then break; fi
           sleep 0.1
@@ -1171,7 +1171,7 @@ struct BrewAction: Identifiable {
         exit 0
         """
         let helper = FileManager.default.temporaryDirectory
-            .appendingPathComponent("BrewBar-update-\(UUID().uuidString).sh")
+            .appendingPathComponent("KegPilot-update-\(UUID().uuidString).sh")
         do {
             try script.write(to: helper, atomically: true, encoding: .utf8)
             let proc = Process()
@@ -1207,7 +1207,7 @@ struct BrewAction: Identifiable {
         // (correctly, per the v1.28 terminal fix) PRESERVES the column — without the leading CR the
         // whole About block would inherit that stale column and cascade progressively to the right
         // (each internal `\n` also preserves the column, so every row shifts further than the last).
-        var text = "\r[\(stamp)] Checking for BrewBar updates…\n"
+        var text = "\r[\(stamp)] Checking for KegPilot updates…\n"
         // Align the values in a fixed column by padding each label to the width of the longest one,
         // rather than hand-typed spaces (which previously left "Current version:" one column off
         // from the others). `row` right-pads the label to `labelWidth`, so every value starts at the
@@ -1248,7 +1248,7 @@ struct BrewAction: Identifiable {
     ///
     /// A `MenuBarExtra(.window)` app is an `LSUIElement`/accessory app: it never becomes a real
     /// foreground app, so a modal `NSSavePanel`/`NSOpenPanel` can't reliably own focus and opens
-    /// BEHIND the high-level BrewBar popover (it appears as a stranded, unfocused window). Merely
+    /// BEHIND the high-level KegPilot popover (it appears as a stranded, unfocused window). Merely
     /// calling `activate(ignoringOtherApps:)` + raising the panel level is not enough.
     ///
     /// The fix is to temporarily promote the app to `.regular` so it becomes a normal foreground

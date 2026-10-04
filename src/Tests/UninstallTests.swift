@@ -412,7 +412,7 @@ enum BrandImages { static func icon(dark: Bool) -> NSImage { NSImage(size: NSSiz
         print("PASS: non-PTY flush path keeps brew's stderr `==>` preamble at column 0")
 
         // About-header cascade (regression for v1.28.4): the manual update-check prints a multi-line
-        // About block (`[time] Checking for BrewBar updates…`, then Current version / Bundle ID /
+        // About block (`[time] Checking for KegPilot updates…`, then Current version / Bundle ID /
         // Location / macOS) via logAppUpdateHeader. It is appended AFTER a prior command's output
         // whose trailing bare LF preserves the column, and every internal `\n` also preserves it —
         // so without a leading CR on each line the whole block cascaded progressively to the right.
@@ -424,7 +424,7 @@ enum BrandImages { static func icon(dark: Bool) -> NSImage { NSImage(size: NSSiz
         pump { !model.busy && !model.checkingUpdates }
         model.checkForAppUpdate(manual: true)
         let aboutLines = model.output.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
-        let checking = aboutLines.first { $0.contains("Checking for BrewBar updates") } ?? ""
+        let checking = aboutLines.first { $0.contains("Checking for KegPilot updates") } ?? ""
         let currentV = aboutLines.first { $0.contains("Current version:") } ?? ""
         let bundleID = aboutLines.first { $0.contains("Bundle ID:") } ?? ""
         let macOSLine = aboutLines.first { $0.contains("macOS:") } ?? ""

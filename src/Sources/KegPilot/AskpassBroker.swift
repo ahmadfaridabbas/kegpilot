@@ -9,8 +9,8 @@ import Darwin
 /// SECURITY MODEL (the whole point of this type):
 /// - The password is NEVER placed in `argv`, in an environment variable, or in a regular file.
 /// - The helper script we write contains only two FIFO paths — not the password.
-/// - When sudo runs the helper, the helper (1) writes one byte to a *request* FIFO to tell BrewBar
-///   "sudo is asking now", then (2) `cat`s a *response* FIFO to its stdout. BrewBar prompts the user
+/// - When sudo runs the helper, the helper (1) writes one byte to a *request* FIFO to tell KegPilot
+///   "sudo is asking now", then (2) `cat`s a *response* FIFO to its stdout. KegPilot prompts the user
 ///   with a native secure field, then writes the password to the response FIFO exactly once. The
 ///   password transits only a 0600 FIFO (an in-kernel pipe buffer; no bytes hit the filesystem) and
 ///   otherwise lives only in a Swift `String` held for the duration of the install.
@@ -18,16 +18,16 @@ import Darwin
 ///   removed when the command finishes (or on stop/clear/deinit).
 ///
 /// Each sudo authentication re-invokes the helper (sudo may retry a few times), so the request
-/// watcher loops: every time the helper signals, BrewBar is asked again. The caller decides whether
+/// watcher loops: every time the helper signals, KegPilot is asked again. The caller decides whether
 /// to re-prompt or reuse the password it already has.
 final class AskpassBroker {
     /// Directory holding the helper + FIFOs (mode 0700, removed on cleanup).
     let directory: URL
     /// The askpass helper script path — this is what goes into `SUDO_ASKPASS`.
     var helperPath: String { directory.appendingPathComponent("askpass").path }
-    /// FIFO the helper writes a byte to when sudo invokes it (BrewBar reads it to learn "asking now").
+    /// FIFO the helper writes a byte to when sudo invokes it (KegPilot reads it to learn "asking now").
     private var requestPath: String { directory.appendingPathComponent("request").path }
-    /// FIFO BrewBar writes the password to; the helper `cat`s it to sudo's stdin.
+    /// FIFO KegPilot writes the password to; the helper `cat`s it to sudo's stdin.
     private var responsePath: String { directory.appendingPathComponent("response").path }
 
     /// Called on the main queue each time sudo asks for the password (the helper signalled a request).
@@ -47,7 +47,7 @@ final class AskpassBroker {
     /// created securely. The directory name is random so it isn't predictable.
     init() throws {
         let base = FileManager.default.temporaryDirectory
-            .appendingPathComponent("BrewBar-askpass-\(UUID().uuidString)")
+            .appendingPathComponent("KegPilot-askpass-\(UUID().uuidString)")
         self.directory = base
         try FileManager.default.createDirectory(at: base,
                                                 withIntermediateDirectories: true,
@@ -178,8 +178,8 @@ final class AskpassBroker {
     /// `exec cat` replaces the shell so sudo reads cat's stdout directly. Both paths are the broker's
     /// own randomly-named FIFOs, so no untrusted interpolation reaches the shell.
     static func helperScript(requestPath: String, responsePath: String) -> String {
-        // `printf 'x'` writes exactly one byte to the request FIFO (blocks until BrewBar opens it to
-        // read), announcing that sudo is asking. Then `exec cat` streams the password BrewBar writes
+        // `printf 'x'` writes exactly one byte to the request FIFO (blocks until KegPilot opens it to
+        // read), announcing that sudo is asking. Then `exec cat` streams the password KegPilot writes
         // to the response FIFO. A single read/line is what sudo consumes.
         """
         #!/bin/sh

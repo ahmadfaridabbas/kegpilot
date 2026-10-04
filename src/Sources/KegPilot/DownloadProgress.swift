@@ -2,7 +2,7 @@ import Foundation
 
 /// Live state for the console's download progress bar. Homebrew (under a PTY) prints a curl-style
 /// bar like `####################  45.1%` that rewrites one line via carriage returns, preceded by
-/// `==> Downloading <url>`. That bar carries only a percentage — no byte totals — so BrewBar looks
+/// `==> Downloading <url>`. That bar carries only a percentage — no byte totals — so KegPilot looks
 /// up the file's size once (a HEAD request on the URL) and derives the downloaded amount from the
 /// percentage. The bar stays on screen until the download reaches 100%, the file is written, or the
 /// command moves on to a non-download step.
@@ -55,7 +55,7 @@ struct DownloadProgress: Equatable {
 }
 
 /// One row in the console's pinned live-download block. Homebrew's parallel download queue reports
-/// several packages at once (`⣷ Cask <name> (<ver>) ####  Downloading X/Y`); BrewBar keys an entry
+/// several packages at once (`⣷ Cask <name> (<ver>) ####  Downloading X/Y`); KegPilot keys an entry
 /// per package name and rebuilds the block from these entries each flush, so the block can never
 /// stack/garble and each row always pairs the right name with the right bytes. Entries stay in the
 /// block (marked `done` at 100%) until every download finishes, then the block commits to the log.

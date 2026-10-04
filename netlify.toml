@@ -1,4 +1,4 @@
-# Netlify configuration for the BrewBar website.
+# Netlify configuration for the KegPilot website.
 # The site is a static site; its root is the repo's docs/ folder
 # (same files previously served by GitHub Pages).
 
