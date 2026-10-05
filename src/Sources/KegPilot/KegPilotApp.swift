@@ -135,13 +135,12 @@ struct Dashboard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
                 Image(nsImage: BrandImages.icon(dark: colorScheme == .dark)).resizable().interpolation(.high)
-                    .frame(width: 64, height: 64).accessibilityHidden(true)
+                    .frame(width: 54, height: 54).accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("KegPilot").font(.system(size: 26, weight: .semibold, design: .rounded)).foregroundStyle(theme.text)
+                    Text("KegPilot").font(.system(size: 22, weight: .semibold, design: .rounded)).foregroundStyle(theme.text)
                     Text("Homebrew from your menu bar.")
                         .foregroundStyle(theme.secondaryText)
-                        .lineLimit(1)
-                        .fixedSize(horizontal: true, vertical: false)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(AppInfo.versionString)
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(theme.tertiaryText)
