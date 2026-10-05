@@ -70,6 +70,10 @@ Suggested manual checks: open in both Light and Dark appearance; navigate action
 
 Official references: [Apple MenuBarExtra window style](https://developer.apple.com/documentation/swiftui/menubarextrastyle/window), [Homebrew command manual](https://docs.brew.sh/Manpage).
 
+## Version 2.3: Cloudflare hosting
+
+Maintenance release. The website moved from Netlify to **Cloudflare Pages** at `kegpilot.pages.dev`, and the in-app self-updater now fetches its `SHA256SUMS.txt` from that host (`AppUpdate.checksumsURL`). The gallery and view screenshots were refreshed across all five appearances (System / Light / Dark / Papery Light / Papery Dark). No functional, Homebrew-command, or business-logic changes. Optimized arm64 build verified; the built bundle reports version 2.3 (build 47); all test suites pass.
+
 ## Version 2.2: KegPilot rebrand
 
 The app is rebranded from **BrewBar** to **KegPilot** with the tagline "Homebrew from your menu bar." This is a branding/identity release — no functional, Homebrew-command, or business-logic changes. What changed: the product name and tagline across the UI, website, SEO, and docs; the app bundle name (`KegPilot.app`, executable `KegPilot`); the source layout (`Sources/KegPilot/`, `KegPilot.xcodeproj`, `KegPilotApp.swift`); and new keg + terminal-`>_` app icons (light/dark, on rounded-rectangle plates) plus a matching monochrome keg menu-bar glyph (replacing the mug). The menu-bar update badge dot is now **red**. The GitHub repository moved to `ahmadfaridabbas/kegpilot`. For compatibility the bundle identifier stays `com.brewbar.app` and the `appearance` UserDefaults key is unchanged, so existing settings and permissions carry over; the production website moved to `kegpilot.netlify.app`. Also fixed a header layout issue so the full tagline and the Options/Close/Quit button labels no longer truncate. Optimized arm64 build verified; the built bundle reports version 2.2 (build 43); all test suites pass.

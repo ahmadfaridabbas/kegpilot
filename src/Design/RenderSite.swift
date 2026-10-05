@@ -161,7 +161,7 @@ func renderDashboard(width: CGFloat, height: CGFloat, theme t: Theme, tab: Tab,
     drawAppIcon(NSRect(x: pad, y: top - 54, width: 54, height: 54), t)
     text("KegPilot", NSPoint(x: pad + 66, y: top - 26), size: 22, color: t.ink, weight: .semibold, rounded: true)
     text("Homebrew from your menu bar.", NSPoint(x: pad + 66, y: top - 44), size: 13, color: t.muted)
-    text("Version 2.2 (43)", NSPoint(x: pad + 66, y: top - 58), size: 10, color: t.muted, weight: .medium)
+    text("Version 2.3 (47)", NSPoint(x: pad + 66, y: top - 58), size: 10, color: t.muted, weight: .medium)
 
     // Right-aligned controls: [•••]  [x Close]  [⏻ Quit]
     var cx = width - pad
@@ -494,7 +494,7 @@ func renderOgCard(theme t: Theme) -> NSBitmapImageRep {
     }
 
     // Footer URL.
-    text("kegpilot.netlify.app", NSPoint(x: pad, y: 40), size: 20, color: c(0xA7AAA9), weight: .medium)
+    text("kegpilot.pages.dev", NSPoint(x: pad, y: 40), size: 20, color: c(0xA7AAA9), weight: .medium)
 
     // Right column: a scaled dashboard peek, clipped, bleeding off the right edge.
     let panelRep = renderDashboard(width: 560, height: 680, theme: t, tab: .maintenance, seg: 2)
