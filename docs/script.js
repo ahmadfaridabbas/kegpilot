@@ -12,14 +12,18 @@ for (const button of document.querySelectorAll('[data-view]')) {
     const view = button.dataset.view;
     image.src = `assets/view-${view}.png`;
     image.alt = viewAlt[view] || name;
-    nameLabel.textContent = name;
+    if (nameLabel) nameLabel.textContent = name;
     for (const item of document.querySelectorAll('[data-view]')) {
       item.setAttribute('aria-pressed', String(item === button));
     }
     if (window.matchMedia('(max-width: 680px)').matches) {
-      document.querySelector('.style-preview').scrollIntoView({
-        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
-        block: 'start'
+      const preview = document.querySelector('.style-preview');
+      const header = document.querySelector('.nav');
+      const headerOffset = (header ? header.getBoundingClientRect().height : 0) + 12;
+      const top = preview.getBoundingClientRect().top + window.scrollY - headerOffset;
+      window.scrollTo({
+        top,
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'
       });
     }
   });
@@ -48,4 +52,31 @@ for (const link of document.querySelectorAll('[data-track="download"]')) {
       file_name: (link.getAttribute('href') || '').split('/').pop()
     });
   });
+}
+
+// Header color adapts over light sections (e.g. the gallery), so text stays readable.
+const nav = document.querySelector('.nav');
+const lightSections = document.querySelectorAll('.gallery-section');
+if (nav && lightSections.length) {
+  let ticking = false;
+  const updateNavTheme = () => {
+    ticking = false;
+    const navBottom = nav.getBoundingClientRect().bottom;
+    let overLight = false;
+    for (const section of lightSections) {
+      const r = section.getBoundingClientRect();
+      // The header overlaps this light section when the section has scrolled
+      // up past the header's bottom edge but hasn't fully scrolled off.
+      if (r.top <= navBottom && r.bottom >= navBottom) { overLight = true; break; }
+    }
+    nav.classList.toggle('nav--on-light', overLight);
+  };
+  const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(updateNavTheme);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll, { passive: true });
+  updateNavTheme();
 }

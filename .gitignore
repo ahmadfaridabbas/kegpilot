@@ -9,3 +9,6 @@ assets-source/
 
 # Local app builds for manual testing — kept off GitHub.
 kegpilot-builds/
+
+# Local progress/handoff note — kept off GitHub.
+kegpilot.md

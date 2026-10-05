@@ -523,25 +523,38 @@ let paperyLight = Theme(style: .paperyLight)
 let paperyDark = Theme(style: .paperyDark)
 let W: CGFloat = 560, H: CGFloat = 680
 
-save(renderDashboard(width: W, height: H, theme: dark, tab: .maintenance, seg: 2), "\(out)/hero.png")
-save(renderDashboard(width: W, height: H, theme: dark, tab: .maintenance, seg: 2), "\(out)/view-maintenance.png")
-save(renderDashboard(width: W, height: H, theme: dark, tab: .installed, seg: 2), "\(out)/view-installed.png")
-save(renderDashboard(width: W, height: H, theme: dark, tab: .updates, seg: 2), "\(out)/view-updates.png")
-save(renderDashboard(width: W, height: H, theme: dark, tab: .console, running: true, seg: 2), "\(out)/view-console.png")
-save(renderDashboard(width: W, height: H, theme: light, tab: .maintenance, seg: 1), "\(out)/light.png")
-save(renderDashboard(width: W, height: H, theme: dark, tab: .maintenance, seg: 2), "\(out)/dark.png")
-save(renderDashboard(width: W, height: H, theme: dark, tab: .installed, seg: 2), "\(out)/installed.png")
-save(renderDashboard(width: W, height: H, theme: dark, tab: .updates, seg: 2), "\(out)/updates.png")
-save(renderDashboard(width: W, height: H, theme: dark, tab: .console, running: true, seg: 2), "\(out)/console.png")
-save(renderDashboard(width: W, height: H, theme: light, tab: .updates, seg: 1), "\(out)/updates-light.png")
+// NOTE: docs/assets/view-maintenance.png is a HAND-CAPTURED real app screenshot (not an offscreen
+// render). It is ALSO used as the top-of-page hero image and the README hero (hero.png was renamed
+// to view-maintenance.png). Do NOT regenerate it here or it will clobber the real screenshot.
+// ON EVERY VERSION BUMP: re-capture view-maintenance.png from the running app (new version visible
+// in the header "Version X.Y (build)") and replace docs/assets/view-maintenance.png. Keep its aspect
+// ratio in sync with the width/height on the two <img ... src="assets/view-maintenance.png"> tags in
+// docs/index.html (the hero figure + the #view-image switcher) and with the .hero-figure img
+// aspect-ratio in docs/styles.css.
+// save(renderDashboard(width: W, height: H, theme: dark, tab: .maintenance, seg: 2), "\(out)/view-maintenance.png")
+// view-installed/updates/console.png are ALSO hand-captured real screenshots now (see note above) —
+// generators commented out so they aren't clobbered. Re-capture them on every version bump.
+// save(renderDashboard(width: W, height: H, theme: dark, tab: .installed, seg: 2), "\(out)/view-installed.png")
+// save(renderDashboard(width: W, height: H, theme: dark, tab: .updates, seg: 2), "\(out)/view-updates.png")
+// save(renderDashboard(width: W, height: H, theme: dark, tab: .console, running: true, seg: 2), "\(out)/view-console.png")
+// The gallery now uses hand-captured per-theme screenshots (maintenance-/installed- *.png:
+// system, dark, light, papery-light, papery-dark). The old auto-rendered gallery images below
+// were DELETED and their generators commented out so a render pass won't recreate orphans.
+// Re-capture the gallery set on every version bump (see kegpilot.md release playbook §6 step 4).
+// save(renderDashboard(width: W, height: H, theme: light, tab: .maintenance, seg: 1), "\(out)/light.png")
+// save(renderDashboard(width: W, height: H, theme: dark, tab: .maintenance, seg: 2), "\(out)/dark.png")
+// save(renderDashboard(width: W, height: H, theme: dark, tab: .installed, seg: 2), "\(out)/installed.png")
+// save(renderDashboard(width: W, height: H, theme: dark, tab: .updates, seg: 2), "\(out)/updates.png")
+// save(renderDashboard(width: W, height: H, theme: dark, tab: .console, running: true, seg: 2), "\(out)/console.png")
+// save(renderDashboard(width: W, height: H, theme: light, tab: .updates, seg: 1), "\(out)/updates-light.png")
 // Search & Install (new in v1.14)
 save(renderDashboard(width: W, height: H, theme: dark, tab: .search, seg: 2), "\(out)/view-search.png")
-save(renderDashboard(width: W, height: H, theme: dark, tab: .search, seg: 2), "\(out)/search.png")
-save(renderDashboard(width: W, height: H, theme: paperyLight, tab: .search, seg: 3), "\(out)/search-papery.png")
-// Papery theme showcase
-save(renderDashboard(width: W, height: H, theme: paperyLight, tab: .maintenance, seg: 3), "\(out)/papery-light.png")
-save(renderDashboard(width: W, height: H, theme: paperyDark, tab: .maintenance, seg: 4), "\(out)/papery-dark.png")
-save(renderDashboard(width: W, height: H, theme: paperyLight, tab: .updates, seg: 3), "\(out)/papery-updates.png")
+// save(renderDashboard(width: W, height: H, theme: dark, tab: .search, seg: 2), "\(out)/search.png")
+// save(renderDashboard(width: W, height: H, theme: paperyLight, tab: .search, seg: 3), "\(out)/search-papery.png")
+// Papery theme showcase (old gallery renders — deleted, now hand-captured)
+// save(renderDashboard(width: W, height: H, theme: paperyLight, tab: .maintenance, seg: 3), "\(out)/papery-light.png")
+// save(renderDashboard(width: W, height: H, theme: paperyDark, tab: .maintenance, seg: 4), "\(out)/papery-dark.png")
+// save(renderDashboard(width: W, height: H, theme: paperyLight, tab: .updates, seg: 3), "\(out)/papery-updates.png")
 
 // Social preview card for Open Graph / Twitter (1200x630)
 save(renderOgCard(theme: dark), "\(out)/og-image.png")

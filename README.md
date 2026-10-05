@@ -4,7 +4,7 @@ A native SwiftUI menu-bar app for **Homebrew** on Apple Silicon, macOS 13 Ventur
 
 **[Website & gallery](https://kegpilot.netlify.app/)** · **[Download](https://github.com/ahmadfaridabbas/kegpilot/releases/latest)** · macOS 13+ · Apple Silicon
 
-![KegPilot maintenance dashboard in dark mode](docs/assets/hero.png)
+![KegPilot maintenance dashboard in dark mode](docs/assets/view-maintenance.png)
 
 ## 🔒 Your password is never stored
 
@@ -41,7 +41,7 @@ Everything lives in one menu-bar window:
 
 | Maintenance | Installed | Updates |
 | --- | --- | --- |
-| ![Maintenance](docs/assets/dark.png) | ![Installed](docs/assets/installed.png) | ![Updates](docs/assets/updates.png) |
+| ![Maintenance](docs/assets/maintenance-dark.png) | ![Installed](docs/assets/installed-dark.png) | ![Updates](docs/assets/view-updates.png) |
 
 - **Maintenance** — Update, Outdated, Upgrade, Cleanup, Autoremove, and Doctor, each a real `brew` command run with fixed, validated arguments.
 - **Installed** — Browse installed formulae and casks with search, then uninstall with a confirmation. Homebrew's dependency checks stay active.
