@@ -1,6 +1,6 @@
-# BrewBar — Complete SEO + AEO + GEO Optimization
+# KegPilot — Complete SEO + AEO + GEO Optimization
 
-I want you to fully optimize the BrewBar website for:
+I want you to fully optimize the KegPilot website for:
 
 1. SEO — Search Engine Optimization
 2. AEO — Answer Engine Optimization
@@ -10,9 +10,9 @@ Website:
 [https://kegpilot.netlify.app/](https://kegpilot.netlify.app/)
 
 Product:  
-BrewBar
+KegPilot
 
-BrewBar is a free, open-source native Homebrew GUI and menu-bar manager for Apple Silicon Macs. It allows users to manage Homebrew visually without having to remember Terminal commands.
+KegPilot is a free, open-source native Homebrew GUI and menu-bar manager for Apple Silicon Macs. It allows users to manage Homebrew visually without having to remember Terminal commands.
 
 IMPORTANT:  
 Do not redesign the website or remove existing content/features unless necessary. Preserve the existing visual design, animations, responsive behavior, branding, and functionality.
@@ -23,17 +23,17 @@ First inspect the entire existing website/codebase and understand its framework 
 
 # 1. PRIMARY ENTITY DEFINITION
 
-Make BrewBar's identity extremely clear to search engines and AI systems.
+Make KegPilot's identity extremely clear to search engines and AI systems.
 
 Use this as the canonical product definition throughout important metadata and structured content:
 
-"BrewBar is a free, open-source Homebrew GUI and menu-bar manager for Apple Silicon Macs. It provides a visual interface for updating, upgrading, cleaning, diagnosing, browsing, searching, installing, and managing Homebrew packages without needing to remember Terminal commands."
+"KegPilot is a free, open-source Homebrew GUI and menu-bar manager for Apple Silicon Macs. It provides a visual interface for updating, upgrading, cleaning, diagnosing, browsing, searching, installing, and managing Homebrew packages without needing to remember Terminal commands."
 
 Do not unnaturally repeat this exact paragraph throughout visible content.
 
 Maintain semantic consistency around these concepts:
 
-BrewBar  
+KegPilot  
 Homebrew GUI  
 Homebrew GUI for Mac  
 Homebrew manager  
@@ -56,7 +56,7 @@ Ensure the homepage has one strong title.
 
 Preferred:
 
-BrewBar — Homebrew GUI & Menu Bar Manager for Mac
+KegPilot — Homebrew GUI & Menu Bar Manager for Mac
 
 Keep it concise and search-oriented.
 
@@ -70,7 +70,7 @@ Add or improve the homepage meta description.
 
 Use approximately:
 
-"BrewBar is a free, open-source Homebrew GUI for Mac. Update, upgrade, clean, diagnose, search, install and manage Homebrew packages from your menu bar."
+"KegPilot is a free, open-source Homebrew GUI for Mac. Update, upgrade, clean, diagnose, search, install and manage Homebrew packages from your menu bar."
 
 Keep it natural and within sensible search-result length.
 
@@ -82,7 +82,7 @@ Add a canonical URL to the homepage.
 
 Use the actual production URL:
 
-[https://brewbar.netlify.app/](https://brewbar.netlify.app/)
+[https://kegpilot.netlify.app/](https://kegpilot.netlify.app/)
 
 There must be only one canonical tag.
 
@@ -115,7 +115,7 @@ Example:
 User-agent: *  
 Allow: /
 
-Sitemap: [https://brewbar.netlify.app/sitemap.xml](https://brewbar.netlify.app/sitemap.xml)
+Sitemap: [https://kegpilot.netlify.app/sitemap.xml](https://kegpilot.netlify.app/sitemap.xml)
 
 Do not block required CSS, JavaScript, images, screenshots, icons or other assets necessary for understanding/rendering the site.
 
@@ -156,7 +156,7 @@ The document hierarchy should make sense without CSS.
 
 # 9. H1
 
-Make the primary H1 strongly communicate what BrewBar is.
+Make the primary H1 strongly communicate what KegPilot is.
 
 Preferred:
 
@@ -174,11 +174,11 @@ Do not damage the existing hero design.
 
 # 10. HERO ANSWER BLOCK
 
-Near the top of the page, make sure there is a concise, crawlable explanation of BrewBar.
+Near the top of the page, make sure there is a concise, crawlable explanation of KegPilot.
 
 It should communicate:
 
-BrewBar is a free, open-source native Homebrew GUI and menu-bar manager for Apple Silicon Macs.
+KegPilot is a free, open-source native Homebrew GUI and menu-bar manager for Apple Silicon Macs.
 
 Users can visually:
 
@@ -204,7 +204,7 @@ Expand it with high-value natural-language questions where they are not already 
 
 Possible questions:
 
-What is BrewBar?
+What is KegPilot?
 
 Is there a GUI for Homebrew on Mac?
 
@@ -214,33 +214,33 @@ Can I use Homebrew without Terminal?
 
 Can I update Homebrew without Terminal?
 
-Can BrewBar update and upgrade Homebrew packages?
+Can KegPilot update and upgrade Homebrew packages?
 
-Can BrewBar install Homebrew formulae and casks?
+Can KegPilot install Homebrew formulae and casks?
 
-Can BrewBar uninstall Homebrew packages?
+Can KegPilot uninstall Homebrew packages?
 
-Does BrewBar replace Homebrew?
+Does KegPilot replace Homebrew?
 
-Is BrewBar free?
+Is KegPilot free?
 
-Is BrewBar open source?
+Is KegPilot open source?
 
-Does BrewBar support Apple Silicon?
+Does KegPilot support Apple Silicon?
 
-Does BrewBar support Intel Macs?
+Does KegPilot support Intel Macs?
 
-Is BrewBar safe?
+Is KegPilot safe?
 
-Does BrewBar store my administrator password?
+Does KegPilot store my administrator password?
 
-How does BrewBar execute Homebrew commands?
+How does KegPilot execute Homebrew commands?
 
-Where can I download BrewBar?
+Where can I download KegPilot?
 
-How do I install BrewBar?
+How do I install KegPilot?
 
-What is the difference between BrewBar and using Homebrew in Terminal?
+What is the difference between KegPilot and using Homebrew in Terminal?
 
 Only include questions whose answers are factually supported by the application/repository.
 
@@ -251,7 +251,7 @@ Each answer should:
 - directly answer the question in the first sentence
 - generally be 1–3 short paragraphs
 - use plain language
-- mention BrewBar naturally where appropriate
+- mention KegPilot naturally where appropriate
 - be understandable without needing surrounding content
 - avoid marketing exaggeration
 
@@ -270,14 +270,14 @@ Structure approximately like:
 {  
 "@context": "[https://schema.org](https://schema.org/)",  
 "@type": "SoftwareApplication",  
-"name": "BrewBar",  
-"description": "BrewBar is a free, open-source Homebrew GUI and menu-bar manager for Apple Silicon Macs.",  
+"name": "KegPilot",  
+"description": "KegPilot is a free, open-source Homebrew GUI and menu-bar manager for Apple Silicon Macs.",  
 "applicationCategory": "UtilitiesApplication",  
 "operatingSystem": "macOS",  
 "softwareVersion": "[derive from current release/project]",  
-"url": "[https://brewbar.netlify.app/](https://brewbar.netlify.app/)",  
+"url": "[https://kegpilot.netlify.app/](https://kegpilot.netlify.app/)",  
 "downloadUrl": "[use actual verified download/release URL]",  
-"codeRepository": "[https://github.com/ahmadfaridabbas/brewbar](https://github.com/ahmadfaridabbas/brewbar)",  
+"codeRepository": "[https://github.com/ahmadfaridabbas/kegpilot](https://github.com/ahmadfaridabbas/kegpilot)",  
 "license": "[use actual repository license URL]",  
 "author": {  
 "@type": "Person",  
@@ -318,9 +318,9 @@ Example structure:
 {  
 "@context": "[https://schema.org](https://schema.org/)",  
 "@type": "WebSite",  
-"name": "BrewBar",  
-"url": "[https://brewbar.netlify.app/](https://brewbar.netlify.app/)",  
-"description": "Official website for BrewBar, a free open-source Homebrew GUI for Mac."  
+"name": "KegPilot",  
+"url": "[https://kegpilot.netlify.app/](https://kegpilot.netlify.app/)",  
+"description": "Official website for KegPilot, a free open-source Homebrew GUI for Mac."  
 }
 
 Avoid redundant or conflicting structured data.
@@ -355,9 +355,9 @@ og:image
 
 Suggested title:
 
-BrewBar — Homebrew GUI & Menu Bar Manager for Mac
+KegPilot — Homebrew GUI & Menu Bar Manager for Mac
 
-Use a dedicated high-quality BrewBar social preview image.
+Use a dedicated high-quality KegPilot social preview image.
 
 Recommended social image:
 
@@ -365,8 +365,8 @@ Recommended social image:
 
 It should clearly show:
 
-BrewBar logo/icon  
-BrewBar name  
+KegPilot logo/icon  
+KegPilot name  
 "Homebrew GUI for Mac"
 
 Make sure the image URL is absolute and publicly accessible.
@@ -397,11 +397,11 @@ Every informative image should have descriptive alt text.
 
 Examples:
 
-"BrewBar Homebrew dashboard on macOS"
+"KegPilot Homebrew dashboard on macOS"
 
-"BrewBar dark mode maintenance dashboard"
+"KegPilot dark mode maintenance dashboard"
 
-"BrewBar package manager showing installed Homebrew formulae"
+"KegPilot package manager showing installed Homebrew formulae"
 
 Decorative images should use empty alt attributes where appropriate.
 
@@ -419,27 +419,27 @@ Optimize the page so an AI system can extract individual factual answers.
 
 Important sections should clearly explain:
 
-What BrewBar is
+What KegPilot is
 
-Who BrewBar is for
+Who KegPilot is for
 
-What BrewBar does
+What KegPilot does
 
-What platforms BrewBar supports
+What platforms KegPilot supports
 
-Whether BrewBar is free
+Whether KegPilot is free
 
-Whether BrewBar is open source
+Whether KegPilot is open source
 
-How BrewBar relates to Homebrew
+How KegPilot relates to Homebrew
 
-How BrewBar executes Homebrew operations
+How KegPilot executes Homebrew operations
 
-How BrewBar handles administrator authentication
+How KegPilot handles administrator authentication
 
-What BrewBar stores locally
+What KegPilot stores locally
 
-How to install BrewBar
+How to install KegPilot
 
 Where the source code is located
 
@@ -459,9 +459,9 @@ Add a compact comparison section if it fits the existing design.
 
 Heading:
 
-BrewBar vs Homebrew in Terminal
+KegPilot vs Homebrew in Terminal
 
-Explain that BrewBar does NOT replace Homebrew.
+Explain that KegPilot does NOT replace Homebrew.
 
 It provides a graphical interface around Homebrew operations.
 
@@ -473,7 +473,7 @@ Homebrew Terminal:
 - users type brew commands
 - full CLI flexibility
 
-BrewBar:
+KegPilot:
 
 - native graphical interface
 - menu-bar access
@@ -481,7 +481,7 @@ BrewBar:
 - one-click maintenance operations
 - still uses Homebrew underneath
 
-Do not claim BrewBar is universally better than Terminal.
+Do not claim KegPilot is universally better than Terminal.
 
 ---
 
@@ -491,15 +491,15 @@ Preserve the existing technical security section.
 
 Make sure it clearly answers:
 
-Does BrewBar store passwords?
+Does KegPilot store passwords?
 
 How are privileged commands authenticated?
 
-Does BrewBar send credentials over the network?
+Does KegPilot send credentials over the network?
 
 What information is stored locally?
 
-Is BrewBar open source?
+Is KegPilot open source?
 
 Link to relevant source code where useful.
 
@@ -512,13 +512,13 @@ Technical accuracy is more important than marketing language.
 Make sure the page clearly identifies:
 
 Product:  
-BrewBar
+KegPilot
 
 Creator:  
 Ahmad Farid Abbas
 
 Source repository:  
-[https://github.com/ahmadfaridabbas/brewbar](https://github.com/ahmadfaridabbas/brewbar)
+[https://github.com/ahmadfaridabbas/kegpilot](https://github.com/ahmadfaridabbas/kegpilot)
 
 License:  
 derive from repository
@@ -526,7 +526,7 @@ derive from repository
 Platform:  
 derive from actual supported versions/architectures
 
-Do not add professional credentials or claims that are not relevant to BrewBar.
+Do not add professional credentials or claims that are not relevant to KegPilot.
 
 ---
 
@@ -536,7 +536,7 @@ Inspect README.md and repository metadata.
 
 The README should begin with a clear definition similar to:
 
-"BrewBar is a free, open-source Homebrew GUI and menu-bar manager for Apple Silicon Macs."
+"KegPilot is a free, open-source Homebrew GUI and menu-bar manager for Apple Silicon Macs."
 
 Then clearly explain its primary functionality.
 
@@ -661,17 +661,17 @@ Keep it concise.
 
 Suggested structure:
 
-# BrewBar
+# KegPilot
 
-> BrewBar is a free, open-source Homebrew GUI and menu-bar manager for Apple Silicon Macs.
+> KegPilot is a free, open-source Homebrew GUI and menu-bar manager for Apple Silicon Macs.
 
 ## Official Website
 
-[https://brewbar.netlify.app/](https://brewbar.netlify.app/)
+[https://kegpilot.netlify.app/](https://kegpilot.netlify.app/)
 
 ## Source Code
 
-[https://github.com/ahmadfaridabbas/brewbar](https://github.com/ahmadfaridabbas/brewbar)
+[https://github.com/ahmadfaridabbas/kegpilot](https://github.com/ahmadfaridabbas/kegpilot)
 
 ## About
 
@@ -703,11 +703,11 @@ Keep technical claims specific and verifiable.
 
 Prefer statements such as:
 
-"BrewBar executes Homebrew commands locally on your Mac."
+"KegPilot executes Homebrew commands locally on your Mac."
 
 over vague statements such as:
 
-"BrewBar revolutionizes package management."
+"KegPilot revolutionizes package management."
 
 Where appropriate, link technical claims to relevant GitHub source/documentation.
 
@@ -762,7 +762,7 @@ Make sure branding is consistent.
 
 Make sure production references use:
 
-[https://brewbar.netlify.app/](https://brewbar.netlify.app/)
+[https://kegpilot.netlify.app/](https://kegpilot.netlify.app/)
 
 Avoid accidentally exposing:
 
@@ -825,7 +825,7 @@ llms.txt
 README  
 GitHub repository description
 
-Treat BrewBar as one consistent software entity.
+Treat KegPilot as one consistent software entity.
 
 ---
 
@@ -929,7 +929,7 @@ Confirm the production build succeeds and report any warnings/errors.
 
 1. Inspect the existing code before changing anything.
 2. Reuse the existing architecture/components/styles.
-3. Do not redesign BrewBar.
+3. Do not redesign KegPilot.
 4. Do not remove existing useful content.
 5. Do not break animations.
 6. Do not break responsive behavior.

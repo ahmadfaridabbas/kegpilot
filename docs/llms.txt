@@ -1,0 +1,47 @@
+# KegPilot
+
+> KegPilot is a free, open-source Homebrew GUI and menu-bar manager for Apple Silicon Macs. It provides a visual interface for updating, upgrading, cleaning, diagnosing, browsing, searching, installing, and managing Homebrew packages without needing to remember Terminal commands.
+
+## Official Website
+
+https://kegpilot.netlify.app/
+
+## Source Code
+
+https://github.com/ahmadfaridabbas/kegpilot
+
+## About
+
+KegPilot is a native SwiftUI menu-bar app for Homebrew on macOS. It runs the `brew` binary already installed on your Mac and streams live command output in a built-in console. KegPilot does not replace Homebrew; it provides a graphical interface around Homebrew operations. It is an independent project and is not affiliated with or endorsed by Homebrew.
+
+- Created by: Ahmad Farid Abbas
+- License: MIT
+- Current version: 2.2.3
+- Platform: macOS 13 Ventura or later, Apple Silicon
+- Requires: an existing Homebrew installation at /opt/homebrew
+
+## Features
+
+- Maintenance: run brew update, outdated, upgrade, cleanup, autoremove, and doctor as real brew commands with fixed, validated arguments.
+- Installed: browse installed formulae and casks with search, and uninstall with a confirmation (Homebrew's dependency checks stay active).
+- Updates: see installed vs. current versions from brew outdated, and upgrade individually or all at once; pinned packages are labeled.
+- Search & Install: search all of Homebrew and install formulae or casks with a confirmation.
+- Console: merged stdout/stderr in arrival order with timestamps, duration, and the real exit code; Stop escalates SIGINT to SIGTERM to SIGKILL.
+- Themes: System, Light, Dark, plus Papery Light and Papery Dark, saved across launches.
+- Lives in the menu bar with no Dock icon.
+
+## Installation
+
+See the install section: https://kegpilot.netlify.app/#install
+
+1. Download and extract KegPilot-2.2.3.zip.
+2. Drag KegPilot.app to your Applications folder.
+3. Clear the macOS quarantine flag: `xattr -dr com.apple.quarantine /Applications/KegPilot.app`
+
+Latest release: https://github.com/ahmadfaridabbas/kegpilot/releases/latest
+
+## Security
+
+See the security section: https://kegpilot.netlify.app/#security
+
+KegPilot never stores your Mac password. When a cask installer needs administrator rights, the password is held in memory for a single Homebrew command and is never saved, logged, written to disk, stored in the Keychain, placed in command arguments or environment variables, or sent over the network. The mechanism is open source in src/Sources/KegPilot/AskpassBroker.swift.
