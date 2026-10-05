@@ -12,8 +12,8 @@ struct UpdatesView: View {
                         .buttonStyle(.plain).foregroundStyle(theme.secondaryText)
                         .help("Clear search").accessibilityLabel("Clear search")
                 }
-                Button("Check") { model.checkUpdates() }.help("Check current Homebrew definitions")
-                Button("Refresh definitions") { model.refreshDefinitions() }.help("Fetch current definitions, then check for updates")
+                Button("Check") { model.checkUpdates() }.help("Check current Homebrew definitions · ⌘R")
+                Button("Refresh definitions") { model.refreshDefinitions() }.help("Fetch current definitions, then check for updates · ⌘⇧R")
             }.disabled(model.busy || !model.ready)
             HStack {
                 Text("\(model.updates.count) available · \(model.updates.filter { $0.pinned }.count) pinned")

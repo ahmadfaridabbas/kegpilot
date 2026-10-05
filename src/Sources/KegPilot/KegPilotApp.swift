@@ -187,6 +187,12 @@ struct Dashboard: View {
                         Text(status)
                     }
                     Divider()
+                    Button("Keyboard Shortcuts…") {
+                        ShortcutsWindowController.shared.show(
+                            appearance: model.appearanceMode,
+                            systemIsDark: colorScheme == .dark
+                        )
+                    }
                     Button("Retry Homebrew Detection") { model.prepare() }.disabled(model.busy)
                     Link("Homebrew Documentation", destination: URL(string: "https://docs.brew.sh/Manpage")!)
                 } label: {
@@ -235,6 +241,36 @@ struct Dashboard: View {
                 Text("Installed").tag("Installed")
                 Text(model.updatesLoaded ? "Updates (\(model.updates.count))" : "Updates").tag("Updates")
             }.pickerStyle(.segmented).focusable(false).hideSegmentedFocusRing()
+            .background {
+                // Invisible, always-mounted shortcut sinks. Because the per-tab buttons only exist
+                // while their tab is showing, their `.keyboardShortcut` is dead from other tabs.
+                // These zero-size buttons stay in the hierarchy on every tab, so their shortcuts are
+                // always live: each one first switches `selectedTab` to the owning section (moving
+                // the window to that tab), then invokes the action. The model methods don't depend
+                // on the tab view being rendered, so running them in the same closure is safe.
+                Group {
+                    // Tab navigation.
+                    Button("") { model.selectedTab = "Maintenance" }.kegShortcut("tab1")
+                    Button("") { model.selectedTab = "Installed" }.kegShortcut("tab2")
+                    Button("") { model.selectedTab = "Updates" }.kegShortcut("tab3")
+                    // Maintenance actions — jump to Maintenance, then run the brew command.
+                    ForEach(BrewAction.all) { action in
+                        Button("") { model.selectedTab = "Maintenance"; model.run(action) }
+                            .kegShortcut(action.command)
+                            .disabled(model.busy || !model.ready)
+                    }
+                    // Brewfile — on the Maintenance tab.
+                    Button("") { model.selectedTab = "Maintenance"; model.exportBrewfile() }
+                        .kegShortcut("export").disabled(model.busy || !model.ready)
+                    Button("") { model.selectedTab = "Maintenance"; model.chooseBrewfileToRestore() }
+                        .kegShortcut("restore").disabled(model.busy || !model.ready)
+                    // Updates — jump to the Updates tab, then check/refresh.
+                    Button("") { model.selectedTab = "Updates"; model.checkUpdates() }
+                        .kegShortcut("check").disabled(model.busy || !model.ready)
+                    Button("") { model.selectedTab = "Updates"; model.refreshDefinitions() }
+                        .kegShortcut("refreshdef").disabled(model.busy || !model.ready)
+                }.frame(width: 0, height: 0).opacity(0).accessibilityHidden(true)
+            }
             if model.selectedTab == "Installed" {
                 InstalledView(model: model)
             } else if model.selectedTab == "Updates" {
@@ -258,7 +294,7 @@ struct Dashboard: View {
                     }.buttonStyle(.plain).disabled(model.busy || !model.ready)
                     .opacity(model.busy || !model.ready ? 0.55 : 1)
                     .accessibilityLabel("\(action.title). \(action.detail). Run brew \(action.command)")
-                    .help("Run brew \(action.command)")
+                    .help("Run brew \(action.command) · \(KeyboardShortcuts.entry(action.command).display)")
                 }
             }
             HStack(spacing: 10) {
@@ -269,9 +305,9 @@ struct Dashboard: View {
                 }
                 Spacer(minLength: 6)
                 Button("Export") { model.exportBrewfile() }
-                    .controlSize(.small).help("Save a Brewfile with brew bundle dump")
+                    .controlSize(.small).help("Save a Brewfile with brew bundle dump · ⌘E")
                 Button("Restore") { model.chooseBrewfileToRestore() }
-                    .controlSize(.small).help("Install from a Brewfile with brew bundle install")
+                    .controlSize(.small).help("Install from a Brewfile with brew bundle install · ⌘⇧B")
             }.disabled(model.busy || !model.ready)
             .padding(.horizontal, 11).padding(.vertical, 8)
             .background(theme.surface, in: RoundedRectangle(cornerRadius: 12))
@@ -365,12 +401,12 @@ struct Dashboard: View {
                     Divider()
                 }
                 HStack(spacing: 12) {
-                    Button { model.copy() } label: { Label("Copy", systemImage: "doc.on.doc") }.disabled(model.output.isEmpty && model.downloads.isEmpty).help("Copy visible output")
-                    Button { model.clear() } label: { Label("Clear", systemImage: "trash") }.disabled(model.output.isEmpty)
+                    Button { model.copy() } label: { Label("Copy", systemImage: "doc.on.doc") }.disabled(model.output.isEmpty && model.downloads.isEmpty).kegShortcut("copy").help("Copy visible output · ⌘⇧C")
+                    Button { model.clear() } label: { Label("Clear", systemImage: "trash") }.disabled(model.output.isEmpty).kegShortcut("clear").help("Clear console · ⌘⌫")
                     Toggle("Follow", isOn: $model.follow).toggleStyle(.checkbox).help("Scroll to new output automatically")
                     Spacer()
                     Button(role: .destructive) { model.stop() } label: { Label(model.stopping ? "Stopping" : "Stop", systemImage: "stop.fill") }
-                        .disabled(!model.busy || !model.ready || model.stopping)
+                        .disabled(!model.busy || !model.ready || model.stopping).kegShortcut("stop").help("Stop the running command · ⌘.")
                 }.font(.system(size: 11)).controlSize(.small).padding(10).foregroundStyle(theme.text)
             }.background(theme.consoleBackground, in: RoundedRectangle(cornerRadius: 12))
                 .clipShape(RoundedRectangle(cornerRadius: 12))
