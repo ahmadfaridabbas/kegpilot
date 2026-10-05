@@ -1,0 +1,15 @@
+{
+  // Cloudflare Workers + Static Assets configuration for the KegPilot website.
+  // The site is plain static HTML/CSS/JS served from the repo's docs/ folder
+  // (no build step). The "$schema" path only resolves if Wrangler is installed
+  // locally as a dev dependency; it is an editor hint and safe to leave as-is.
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "kegpilot",
+  "compatibility_date": "2026-10-05",
+  "assets": {
+    // Deployable site root. KegPilot's static site lives in docs/, not dist/.
+    "directory": "./docs"
+    // NOTE: no "not_found_handling" — KegPilot is a conventional static page,
+    // not a client-side SPA, so genuine 404 behavior is retained.
+  }
+}
