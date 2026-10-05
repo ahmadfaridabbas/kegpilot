@@ -7,7 +7,7 @@ I want you to fully optimize the KegPilot website for:
 3. GEO — Generative Engine Optimization / AI search discoverability
 
 Website:  
-[https://kegpilot.netlify.app/](https://kegpilot.netlify.app/)
+[https://kegpilot.pages.dev/](https://kegpilot.pages.dev/)
 
 Product:  
 KegPilot
@@ -82,7 +82,7 @@ Add a canonical URL to the homepage.
 
 Use the actual production URL:
 
-[https://kegpilot.netlify.app/](https://kegpilot.netlify.app/)
+[https://kegpilot.pages.dev/](https://kegpilot.pages.dev/)
 
 There must be only one canonical tag.
 
@@ -115,7 +115,7 @@ Example:
 User-agent: *  
 Allow: /
 
-Sitemap: [https://kegpilot.netlify.app/sitemap.xml](https://kegpilot.netlify.app/sitemap.xml)
+Sitemap: [https://kegpilot.pages.dev/sitemap.xml](https://kegpilot.pages.dev/sitemap.xml)
 
 Do not block required CSS, JavaScript, images, screenshots, icons or other assets necessary for understanding/rendering the site.
 
@@ -275,7 +275,7 @@ Structure approximately like:
 "applicationCategory": "UtilitiesApplication",  
 "operatingSystem": "macOS",  
 "softwareVersion": "[derive from current release/project]",  
-"url": "[https://kegpilot.netlify.app/](https://kegpilot.netlify.app/)",  
+"url": "[https://kegpilot.pages.dev/](https://kegpilot.pages.dev/)",  
 "downloadUrl": "[use actual verified download/release URL]",  
 "codeRepository": "[https://github.com/ahmadfaridabbas/kegpilot](https://github.com/ahmadfaridabbas/kegpilot)",  
 "license": "[use actual repository license URL]",  
@@ -319,7 +319,7 @@ Example structure:
 "@context": "[https://schema.org](https://schema.org/)",  
 "@type": "WebSite",  
 "name": "KegPilot",  
-"url": "[https://kegpilot.netlify.app/](https://kegpilot.netlify.app/)",  
+"url": "[https://kegpilot.pages.dev/](https://kegpilot.pages.dev/)",  
 "description": "Official website for KegPilot, a free open-source Homebrew GUI for Mac."  
 }
 
@@ -667,7 +667,7 @@ Suggested structure:
 
 ## Official Website
 
-[https://kegpilot.netlify.app/](https://kegpilot.netlify.app/)
+[https://kegpilot.pages.dev/](https://kegpilot.pages.dev/)
 
 ## Source Code
 
@@ -762,7 +762,7 @@ Make sure branding is consistent.
 
 Make sure production references use:
 
-[https://kegpilot.netlify.app/](https://kegpilot.netlify.app/)
+[https://kegpilot.pages.dev/](https://kegpilot.pages.dev/)
 
 Avoid accidentally exposing:
 

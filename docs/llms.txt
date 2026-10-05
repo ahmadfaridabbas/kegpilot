@@ -4,7 +4,7 @@
 
 ## Official Website
 
-https://kegpilot.netlify.app/
+https://kegpilot.pages.dev/
 
 ## Source Code
 
@@ -32,7 +32,7 @@ KegPilot is a native SwiftUI menu-bar app for Homebrew on macOS. It runs the `br
 
 ## Installation
 
-See the install section: https://kegpilot.netlify.app/#install
+See the install section: https://kegpilot.pages.dev/#install
 
 1. Download and extract KegPilot-2.2.3.zip.
 2. Drag KegPilot.app to your Applications folder.
@@ -42,6 +42,6 @@ Latest release: https://github.com/ahmadfaridabbas/kegpilot/releases/latest
 
 ## Security
 
-See the security section: https://kegpilot.netlify.app/#security
+See the security section: https://kegpilot.pages.dev/#security
 
 KegPilot never stores your Mac password. When a cask installer needs administrator rights, the password is held in memory for a single Homebrew command and is never saved, logged, written to disk, stored in the Keychain, placed in command arguments or environment variables, or sent over the network. The mechanism is open source in src/Sources/KegPilot/AskpassBroker.swift.
