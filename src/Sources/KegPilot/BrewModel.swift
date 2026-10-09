@@ -113,6 +113,14 @@ struct BrewAction: Identifiable {
     /// The draft the user was typing before pressing Up — restored when they press Down past the end
     /// of history so they don't lose what they started writing.
     private var historyDraft = ""
+    /// A destructive console command awaiting explicit confirmation. When `runConsoleInput()`
+    /// classifies the typed command as system-modifying (see `Self.destructiveConsoleReason`), it
+    /// is stashed here (parsed argv) rather than executed, and the UI shows a confirmation card.
+    /// `confirmConsoleCommand()` runs it; `cancelConsoleCommand()` discards it.
+    @Published var consoleCommandCandidate: [String]?
+    /// A short human-readable reason the pending `consoleCommandCandidate` needs confirmation
+    /// (e.g. "uninstalls packages"), shown in the confirmation card. Nil when nothing is pending.
+    @Published var consoleCommandReason: String?
     // MARK: -
 
     @Published var follow = true
@@ -801,8 +809,36 @@ struct BrewAction: Identifiable {
         historyIndex = -1
         historyDraft = ""
         consoleInput = ""
-        // Some brew subcommands mutate state that the app tracks; mark caches stale so the UI
-        // reflects the real state after the command finishes.
+        // Gate system-modifying commands behind an explicit confirmation card instead of running
+        // them immediately. The argument validation above prevents shell injection, but it does not
+        // make a command safe — `uninstall`, `zap`, `cleanup`, `upgrade`, forced installs, etc. can
+        // remove packages or overwrite apps. Read-only commands (info, list, search, …) run straight
+        // through. See `destructiveConsoleReason` for the exact classification.
+        if let reason = Self.destructiveConsoleReason(for: parts) {
+            consoleCommandCandidate = parts
+            consoleCommandReason = reason
+            return
+        }
+        runConsoleCommand(parts)
+    }
+
+    /// Confirm and run the destructive console command currently stashed in `consoleCommandCandidate`.
+    func confirmConsoleCommand() {
+        guard let parts = consoleCommandCandidate, ready, !busy else { return }
+        consoleCommandCandidate = nil
+        consoleCommandReason = nil
+        runConsoleCommand(parts)
+    }
+
+    /// Discard a pending destructive console command without running it.
+    func cancelConsoleCommand() {
+        consoleCommandCandidate = nil
+        consoleCommandReason = nil
+    }
+
+    /// Execute an already-validated console argv and mark affected caches stale. Shared by the
+    /// direct (read-only) path and the confirmed-destructive path so both behave identically.
+    private func runConsoleCommand(_ parts: [String]) {
         let verb = parts.first ?? ""
         execute(arguments: parts) { [weak self] code, cancelled in
             guard let self = self else { return }
@@ -815,6 +851,62 @@ struct BrewAction: Identifiable {
                 break
             }
         }
+    }
+
+    /// Classify a parsed `brew` argv as system-modifying (needs confirmation) or read-only (runs
+    /// immediately). Returns a short human-readable reason when confirmation is required, or nil for
+    /// read-only commands. Pure and static so it can be unit-tested without a running model.
+    ///
+    /// Rationale: the console's per-token regex blocks shell injection but is not a capability
+    /// sandbox. This classifier is the product-safety layer that distinguishes commands which can
+    /// remove packages, overwrite applications, run package install scripts, or change configuration
+    /// from inert read-only queries. It errs toward requiring confirmation: a verb it doesn't
+    /// recognize as explicitly read-only, or any command carrying a forceful flag, is treated as
+    /// destructive.
+    static func destructiveConsoleReason(for parts: [String]) -> String? {
+        guard let verb = parts.first?.lowercased() else { return nil }
+
+        // A forceful/dangerous flag makes even an otherwise-benign command destructive.
+        let forcefulFlags: Set<String> = ["--force", "-f", "--force-bottle", "--overwrite"]
+        if parts.dropFirst().contains(where: { forcefulFlags.contains($0.lowercased()) }) {
+            return "uses a forceful flag that can overwrite or remove files"
+        }
+
+        // Explicitly system-modifying subcommands, each with a specific reason.
+        switch verb {
+        case "uninstall", "remove", "rm":            return "uninstalls packages"
+        case "zap":                                  return "removes a cask and all its leftover files"
+        case "upgrade":                              return "upgrades installed packages"
+        case "install", "reinstall":                 return "installs software and may run package scripts"
+        case "cleanup":                              return "deletes old versions and cached downloads"
+        case "autoremove":                           return "uninstalls unused dependencies"
+        case "pin", "unpin":                         return "changes which packages are held back"
+        case "link", "unlink":                       return "changes symlinks in your Homebrew prefix"
+        case "tap", "untap":                         return "adds or removes a package source"
+        case "postinstall":                          return "re-runs a package's install script"
+        case "bundle":
+            // `bundle` (install) and `bundle dump --force` modify state; `bundle list/check` don't.
+            let sub = parts.dropFirst().first(where: { !$0.hasPrefix("-") })?.lowercased()
+            switch sub {
+            case "install", "exec", nil:             return "installs everything listed in a Brewfile"
+            case "dump":                             return "writes a Brewfile to disk"
+            default:                                 return nil
+            }
+        default:
+            break
+        }
+
+        // A curated allow-list of read-only verbs runs without confirmation. Anything not on it is
+        // treated as destructive by default (fail safe) so new/unknown subcommands never slip
+        // through unconfirmed.
+        let readOnly: Set<String> = [
+            "list", "ls", "info", "abv", "search", "home", "homepage", "desc",
+            "outdated", "deps", "uses", "leaves", "doctor", "dr", "config",
+            "--version", "-v", "--help", "-h", "help", "commands", "options",
+            "cat", "which", "tap-info", "analytics", "shellenv", "casks", "formulae",
+        ]
+        if readOnly.contains(verb) { return nil }
+        return "may modify your system"
     }
 
     /// Navigate UP through command history (older). Saves the current draft on the first press.
@@ -1164,30 +1256,44 @@ struct BrewAction: Identifiable {
     private var progressObservation: NSKeyValueObservation?
 
     /// Verify the downloaded ZIP against the published checksums, then unzip + swap. Verification is
-    /// best-effort-strict: if we can fetch the checksums and our file's hash isn't listed/matching,
-    /// we abort; if the checksums file itself can't be fetched we proceed (the download came from the
-    /// same GitHub release), logging that verification was skipped.
+    /// MANDATORY and fails closed: the update aborts (leaving the installed app untouched) unless we
+    /// (1) compute the download's SHA-256, (2) fetch `SHA256SUMS.txt`, (3) find an entry for the
+    /// exact expected asset filename, and (4) match it. Any missing or unmatched verification data
+    /// aborts — the integrity check is the only boundary guarding an in-place app replacement, so it
+    /// must never be optional. (The distribution is ad-hoc signed, not Apple-notarized, which is why
+    /// this checksum is the security boundary rather than a code signature.)
     private func verifyAndInstall(zip: URL, tag: String) async {
         updateInstallStage = "Verifying…"
         let expectedName = AppUpdate.assetFileName(forTag: tag)
-        if let localHash = sha256Hex(of: zip) {
-            if let (data, resp) = try? await URLSession.shared.data(from: AppUpdate.checksumsURL),
-               (resp as? HTTPURLResponse)?.statusCode == 200,
-               let text = String(data: data, encoding: .utf8) {
-                let sums = AppUpdate.parseChecksums(text)
-                if let expected = sums[expectedName] {
-                    guard expected == localHash else {
-                        failUpdate("Update verification failed (checksum mismatch). Aborted; your app is unchanged.")
-                        return
-                    }
-                    logAppUpdate("Verified SHA-256 \(localHash.prefix(12))… against SHA256SUMS.txt.")
-                } else {
-                    logAppUpdate("Checksum for \(expectedName) not published yet; proceeding (download is from the signed release).")
-                }
-            } else {
-                logAppUpdate("Could not fetch SHA256SUMS.txt; proceeding (download is from the release).")
-            }
+
+        // (1) Compute the download's hash. If we can't read/hash it, fail closed.
+        guard let localHash = sha256Hex(of: zip) else {
+            failUpdate("Update verification failed (couldn't read the download). Aborted; your app is unchanged.")
+            return
         }
+
+        // (2) Fetch the checksum manifest. A failed/non-200 fetch or undecodable body aborts.
+        guard let (data, resp) = try? await URLSession.shared.data(from: AppUpdate.checksumsURL),
+              (resp as? HTTPURLResponse)?.statusCode == 200,
+              let text = String(data: data, encoding: .utf8) else {
+            failUpdate("Update verification failed (couldn't fetch SHA256SUMS.txt). Aborted; your app is unchanged.")
+            return
+        }
+
+        // (3) Require an entry for the exact expected asset filename.
+        let sums = AppUpdate.parseChecksums(text)
+        guard let expected = sums[expectedName] else {
+            failUpdate("Update verification failed (no published checksum for \(expectedName)). Aborted; your app is unchanged.")
+            return
+        }
+
+        // (4) The hash must match.
+        guard expected == localHash else {
+            failUpdate("Update verification failed (checksum mismatch). Aborted; your app is unchanged.")
+            return
+        }
+
+        logAppUpdate("Verified SHA-256 \(localHash.prefix(12))… against SHA256SUMS.txt.")
         await unzipAndSwap(zip: zip, tag: tag)
     }
 
@@ -1251,8 +1357,18 @@ struct BrewAction: Identifiable {
     /// Write and launch a detached shell helper that waits for this process to exit, swaps the
     /// bundle in place (old moved aside, new moved in; rolled back on failure), relaunches KegPilot,
     /// and cleans up. Runs via `/bin/sh` fully detached so it survives our termination.
+    ///
+    /// Security: the four filesystem paths are **never interpolated into the script text**. The
+    /// only value baked into the script is the integer `pid`. Each path is passed as a separate
+    /// positional argument (`$1`–`$4`) on the `/bin/sh` argv, so the shell receives each one as a
+    /// single pre-split token and never re-parses it. A path containing shell-significant characters
+    /// (spaces, quotes, `$`, backticks, `;`, …) therefore cannot alter the script's structure. The
+    /// script references them only through double-quoted positional parameters (`"$1"`), which the
+    /// shell does not word-split or glob.
     private func launchSwapHelper(newApp: String, installedApp: String, stageDir: String, zip: String) {
         let pid = ProcessInfo.processInfo.processIdentifier
+        // Positional parameters inside the script:
+        //   $1 = installedApp   $2 = newApp   $3 = stageDir   $4 = zip
         let script = """
         #!/bin/sh
         # Wait for KegPilot (pid \(pid)) to exit.
@@ -1260,22 +1376,22 @@ struct BrewAction: Identifiable {
           if ! kill -0 \(pid) 2>/dev/null; then break; fi
           sleep 0.1
         done
-        BACKUP="\(installedApp).old-$$"
+        BACKUP="$1.old-$$"
         # Move the current app aside; if that fails (permissions), abort without damage.
-        if ! /bin/mv "\(installedApp)" "$BACKUP" 2>/dev/null; then
+        if ! /bin/mv "$1" "$BACKUP" 2>/dev/null; then
           # Try to relaunch the existing app and bail.
-          /usr/bin/open "\(installedApp)" 2>/dev/null
+          /usr/bin/open "$1" 2>/dev/null
           exit 1
         fi
         # Move the new app into place. On failure, roll back the backup.
-        if ! /bin/mv "\(newApp)" "\(installedApp)" 2>/dev/null; then
-          /bin/mv "$BACKUP" "\(installedApp)" 2>/dev/null
-          /usr/bin/open "\(installedApp)" 2>/dev/null
+        if ! /bin/mv "$2" "$1" 2>/dev/null; then
+          /bin/mv "$BACKUP" "$1" 2>/dev/null
+          /usr/bin/open "$1" 2>/dev/null
           exit 1
         fi
         # Success: remove backup + staging, relaunch the new app.
-        /bin/rm -rf "$BACKUP" "\(stageDir)" "\(zip)" 2>/dev/null
-        /usr/bin/open "\(installedApp)"
+        /bin/rm -rf "$BACKUP" "$3" "$4" 2>/dev/null
+        /usr/bin/open "$1"
         exit 0
         """
         let helper = FileManager.default.temporaryDirectory
@@ -1284,7 +1400,9 @@ struct BrewAction: Identifiable {
             try script.write(to: helper, atomically: true, encoding: .utf8)
             let proc = Process()
             proc.executableURL = URL(fileURLWithPath: "/bin/sh")
-            proc.arguments = [helper.path]
+            // argv[0] = script path; the four paths follow as $1–$4. Passing them as discrete argv
+            // elements (not interpolated into the script) is what makes shell metacharacters inert.
+            proc.arguments = [helper.path, installedApp, newApp, stageDir, zip]
             try proc.run()  // detached: we terminate right after, the helper keeps running
         } catch {
             failUpdate("Couldn't start the updater helper. Your app is unchanged.")
@@ -1437,7 +1555,7 @@ struct BrewAction: Identifiable {
     func cancelRestoreBrewfile() { brewfileRestoreCandidate = nil }
 
     func stop() { guard busy else { return }; stopping = true; awaitingInput = false; promptText = ""; awaitingPassword = false; passwordDraft = ""; teardownAskpass(); clearDownload(); recovery = nil; status = "Stopping…"; runner?.cancel() }
-    func clear() { terminal.reset(); output = ""; pending.removeAll(); cleanRemainder = ""; truncated = false; clearDownload(); recovery = nil }
+    func clear() { terminal.reset(); output = ""; pending.removeAll(); cleanRemainder = ""; truncated = false; clearDownload(); recovery = nil; consoleCommandCandidate = nil; consoleCommandReason = nil }
     func copy() {
         var text = output
         if !downloads.isEmpty {

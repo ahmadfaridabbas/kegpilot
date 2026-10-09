@@ -402,6 +402,29 @@ struct Dashboard: View {
                     .accessibilityLabel("Restore from Brewfile \(restore.lastPathComponent). Install or Cancel.")
                     Divider()
                 }
+                if let pending = model.consoleCommandCandidate, !model.busy {
+                    let reason = model.consoleCommandReason ?? "may modify your system"
+                    let commandText = "brew " + pending.joined(separator: " ")
+                    HStack(spacing: 10) {
+                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(theme.warning)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Run this command? It \(reason).").font(.system(size: 11, weight: .semibold)).foregroundStyle(theme.text)
+                            Text(commandText).font(.system(size: 10, design: .monospaced)).foregroundStyle(theme.secondaryText)
+                                .lineLimit(1).truncationMode(.middle).help(commandText)
+                        }
+                        Spacer(minLength: 8)
+                        Button { model.cancelConsoleCommand() } label: { Text("Cancel") }
+                            .buttonStyle(.bordered).controlSize(.small)
+                        Button(role: .destructive) { model.confirmConsoleCommand() } label: { Label("Run", systemImage: "play.fill") }
+                            .buttonStyle(.borderedProminent).controlSize(.small).disabled(!model.ready)
+                            .help("Run \(commandText)")
+                    }
+                    .font(.system(size: 11)).padding(10)
+                    .background(theme.warning.opacity(0.12))
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Confirm command \(commandText). It \(reason). Run or Cancel.")
+                    Divider()
+                }
                 BrewInputBar(model: model, theme: theme, requestFocus: $model.focusInputRequest)
                 Divider()
                 HStack(spacing: 12) {

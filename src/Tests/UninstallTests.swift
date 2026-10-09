@@ -628,6 +628,48 @@ enum BrandImages { static func icon(dark: Bool) -> NSImage { NSImage(size: NSSiz
         model.brewPath = fixture.path
         print("PASS: askpass caches the password — repeated sudo prompts in one command are answered after a single entry")
 
+        // Console destructive-command classifier (S-03): read-only verbs run straight through,
+        // system-modifying verbs and forceful flags require confirmation (fail-safe: unknown verbs
+        // are treated as destructive).
+        func readOnly(_ cmd: String) { precondition(BrewModel.destructiveConsoleReason(for: cmd.split(separator: " ").map(String.init)) == nil, "`\(cmd)` must be read-only") }
+        func destructive(_ cmd: String) { precondition(BrewModel.destructiveConsoleReason(for: cmd.split(separator: " ").map(String.init)) != nil, "`\(cmd)` must need confirmation") }
+        for cmd in ["list", "info git", "search wget", "outdated", "deps node", "doctor", "config", "leaves", "uses --installed openssl", "--version", "home git", "desc wget"] { readOnly(cmd) }
+        for cmd in ["uninstall git", "zap zoom", "upgrade", "upgrade node", "install wget", "reinstall git", "cleanup", "autoremove", "pin node", "unpin node", "link foo", "unlink foo", "tap homebrew/cask", "untap homebrew/cask", "postinstall foo"] { destructive(cmd) }
+        // Forceful flags make even an otherwise-benign command require confirmation.
+        for cmd in ["install --force wget", "list --force", "info -f git", "fetch --force-bottle x", "install --overwrite p"] { destructive(cmd) }
+        // `bundle` subcommand nuance: list/check are read-only; install/dump modify state.
+        readOnly("bundle list"); readOnly("bundle check")
+        destructive("bundle install"); destructive("bundle"); destructive("bundle dump")
+        // Fail-safe default: an unrecognized verb is treated as destructive.
+        destructive("frobnicate everything")
+
+        // Model-level gating: a destructive command typed into the console is stashed for
+        // confirmation (not executed); confirming runs it; cancelling discards it.
+        model.brewPath = fixture.path
+        precondition(!model.busy && model.consoleCommandCandidate == nil)
+        model.consoleInput = "brew uninstall success"
+        model.runConsoleInput()
+        precondition(model.consoleCommandCandidate == ["uninstall", "success"], "destructive command must be stashed, got \(String(describing: model.consoleCommandCandidate))")
+        precondition(model.consoleCommandReason != nil && !model.busy, "destructive command must NOT auto-run")
+        model.cancelConsoleCommand()
+        precondition(model.consoleCommandCandidate == nil && !model.busy, "cancel must discard without running")
+        // Confirm path actually runs the command.
+        model.packages = [package("success")]
+        model.consoleInput = "brew uninstall success"
+        model.runConsoleInput()
+        precondition(model.consoleCommandCandidate != nil && !model.busy)
+        model.confirmConsoleCommand()
+        precondition(model.busy && model.consoleCommandCandidate == nil, "confirm must launch and clear the candidate")
+        pump { !model.busy }
+        precondition(model.output.contains("uninstall"), "the confirmed command must have executed")
+        // Read-only command runs immediately with no confirmation prompt.
+        model.consoleInput = "brew info git"
+        model.runConsoleInput()
+        precondition(model.consoleCommandCandidate == nil, "read-only command must not require confirmation")
+        precondition(model.busy, "read-only command runs immediately")
+        pump { !model.busy }
+        print("PASS: console destructive-command classifier + confirmation gating (read-only runs, destructive confirmed/cancelled)")
+
         print("PASS: UninstallTests")
     }
     static func pump(_ done: () -> Bool) {

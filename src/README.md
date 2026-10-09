@@ -70,6 +70,14 @@ Suggested manual checks: open in both Light and Dark appearance; navigate action
 
 Official references: [Apple MenuBarExtra window style](https://developer.apple.com/documentation/swiftui/menubarextrastyle/window), [Homebrew command manual](https://docs.brew.sh/Manpage).
 
+## Version 2.4.1: Mandatory update verification + console safeguards
+
+Security release. The in-app self-updater now **fails closed** on integrity verification. Previously `verifyAndInstall(zip:tag:)` would proceed to install when the `SHA256SUMS.txt` manifest couldn't be fetched, when it had no entry for the expected asset, or when the download's hash couldn't be computed — only an explicit hash *mismatch* aborted. Because the updater subsequently clears quarantine and swaps the app bundle in place, the checksum is the one integrity boundary guarding that replacement, so it must be mandatory rather than best-effort. The updater now aborts (leaving the installed app untouched) unless it computes the download's SHA-256, fetches the manifest (HTTP 200, decodable), finds an entry for the exact expected asset filename, and matches it.
+
+Also hardened the detached swap helper (`launchSwapHelper`). It previously interpolated filesystem paths directly into a `/bin/sh` script's double-quoted strings; command substitution (`$(…)`/backticks) executes even inside double quotes, so a path containing shell-significant characters could alter the script. The four paths are now passed as **positional arguments** (`$1`–`$4`) on the `/bin/sh` argv — each received as a single pre-split token the shell never re-parses — and only the integer process id is baked into the script text.
+
+Finally, the command console now requires **explicit confirmation for system-modifying commands**. The per-token input regex blocks shell injection but was never a capability sandbox, so `uninstall`, `zap`, `upgrade`, `install`/`reinstall`, `cleanup`, `autoremove`, `pin`/`link`/`tap`, any command carrying a forceful flag (`--force`, `-f`, `--overwrite`, `--force-bottle`), and any unrecognized verb (fail-safe) now surface a confirmation card before running. Read-only queries (`info`, `list`, `search`, `outdated`, `deps`, `doctor`, …) still run immediately. Classification lives in the pure, unit-tested `BrewModel.destructiveConsoleReason(for:)`.
+
 ## Version 2.3: Cloudflare hosting
 
 Maintenance release. The website moved from Netlify to **Cloudflare Pages** at `kegpilot.pages.dev`, and the in-app self-updater now fetches its `SHA256SUMS.txt` from that host (`AppUpdate.checksumsURL`). The gallery and view screenshots were refreshed across all five appearances (System / Light / Dark / Papery Light / Papery Dark). No functional, Homebrew-command, or business-logic changes. Optimized arm64 build verified; the built bundle reports version 2.3 (build 47); all test suites pass.
