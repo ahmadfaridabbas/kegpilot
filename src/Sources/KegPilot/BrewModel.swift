@@ -101,6 +101,9 @@ struct BrewAction: Identifiable {
     // MARK: - Console input bar
     /// The text currently typed in the console input field (bound to the text field in the UI).
     @Published var consoleInput = ""
+    /// Set to true by the ⌘L shortcut to request focus on the input field; the view resets it to
+    /// false once focus is applied. Using the model avoids @State macro issues with swiftc direct builds.
+    @Published var focusInputRequest = false
     /// History of commands typed via the input bar (oldest first). Persisted in UserDefaults so it
     /// survives panel close/reopen, but not app quit (intentional — brew commands aren't shell history).
     @Published var commandHistory: [String] = []

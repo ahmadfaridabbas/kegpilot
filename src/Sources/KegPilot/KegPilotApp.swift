@@ -121,7 +121,6 @@ struct Dashboard: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var model: BrewModel
-    @State private var inputFocusRequest = false
     private var statusColor: Color { model.busy ? .orange : (model.failed ? .red : .green) }
     private var theme: Theme { Theme.resolve(model.appearanceMode, systemIsDark: colorScheme == .dark) }
     private var appearanceIcon: String {
@@ -271,7 +270,7 @@ struct Dashboard: View {
                     Button("") { model.selectedTab = "Updates"; model.refreshDefinitions() }
                         .kegShortcut("refreshdef").disabled(model.busy || !model.ready)
                     // Console input — focus the brew input bar.
-                    Button("") { inputFocusRequest = true }.kegShortcut("focusinput")
+                    Button("") { model.focusInputRequest = true }.kegShortcut("focusinput")
                 }.frame(width: 0, height: 0).opacity(0).accessibilityHidden(true)
             }
             if model.selectedTab == "Installed" {
@@ -403,7 +402,7 @@ struct Dashboard: View {
                     .accessibilityLabel("Restore from Brewfile \(restore.lastPathComponent). Install or Cancel.")
                     Divider()
                 }
-                BrewInputBar(model: model, theme: theme, requestFocus: $inputFocusRequest)
+                BrewInputBar(model: model, theme: theme, requestFocus: $model.focusInputRequest)
                 Divider()
                 HStack(spacing: 12) {
                     Button { model.copy() } label: { Label("Copy", systemImage: "doc.on.doc") }.disabled(model.output.isEmpty && model.downloads.isEmpty).kegShortcut("copy").help("Copy visible output · ⌘⇧C")
@@ -724,44 +723,126 @@ extension View {
     }
 }
 
+/// A thin NSTextField subclass that intercepts Up/Down arrow keys for history navigation and
+/// passes everything else to the standard field editor. Used by BrewConsoleTextField below.
+final class HistoryTextField: NSTextField {
+    var onUp: (() -> Void)?
+    var onDown: (() -> Void)?
+
+    override func keyDown(with event: NSEvent) {
+        switch event.keyCode {
+        case 126: onUp?()    // Up arrow
+        case 125: onDown?()  // Down arrow
+        default:  super.keyDown(with: event)
+        }
+    }
+}
+
+/// An NSTextField wrapped for SwiftUI that handles Up/Down history, Return submit, focus requests,
+/// and the onChange callback — all compatible with macOS 13+.
+struct BrewConsoleTextField: NSViewRepresentable {
+    @Binding var text: String
+    @Binding var requestFocus: Bool
+    let placeholder: String
+    let isEnabled: Bool
+    var onSubmit: () -> Void
+    var onUp: () -> Void
+    var onDown: () -> Void
+    var onChange: (String) -> Void
+    var font: NSFont = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+    var textColor: NSColor = .labelColor
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    func makeNSView(context: Context) -> HistoryTextField {
+        let field = HistoryTextField()
+        field.placeholderString = placeholder
+        field.isBordered = false
+        field.drawsBackground = false
+        field.focusRingType = .none
+        field.font = font
+        field.textColor = textColor
+        field.isEnabled = isEnabled
+        field.delegate = context.coordinator
+        field.target = context.coordinator
+        field.action = #selector(Coordinator.submitted(_:))
+        field.onUp = onUp
+        field.onDown = onDown
+        context.coordinator.field = field
+        return field
+    }
+
+    func updateNSView(_ field: HistoryTextField, context: Context) {
+        if field.stringValue != text { field.stringValue = text }
+        field.isEnabled = isEnabled
+        field.textColor = textColor
+        field.font = font
+        field.onUp = onUp
+        field.onDown = onDown
+        // Handle focus request from ⌘L.
+        if requestFocus {
+            DispatchQueue.main.async {
+                field.window?.makeFirstResponder(field)
+                self.requestFocus = false
+            }
+        }
+    }
+
+    final class Coordinator: NSObject, NSTextFieldDelegate {
+        var parent: BrewConsoleTextField
+        weak var field: HistoryTextField?
+        init(_ parent: BrewConsoleTextField) { self.parent = parent }
+
+        @objc func submitted(_ sender: Any) {
+            parent.onSubmit()
+        }
+
+        func controlTextDidChange(_ obj: Notification) {
+            if let field = obj.object as? NSTextField {
+                let newValue = field.stringValue
+                if parent.text != newValue {
+                    parent.text = newValue
+                    parent.onChange(newValue)
+                }
+            }
+        }
+    }
+}
+
 /// The brew command input bar shown at the bottom of the console, above the Copy/Clear toolbar.
 ///
 /// Lets the user type any brew command (with or without the `brew` prefix) and submit it with
 /// Return. Up/Down arrow keys navigate history. ⌘L focuses the field from anywhere in the panel.
 /// Input is validated against a strict allowlist (alphanumerics + common brew flag chars) before
 /// any subprocess is spawned, so shell metacharacters can never reach the process environment.
+/// Compatible with macOS 13+ (no .onKeyPress, no @State macro).
 struct BrewInputBar: View {
     @ObservedObject var model: BrewModel
     let theme: Theme
-    /// Binding driven by the parent Dashboard's @FocusState. When the parent sets this true
-    /// (via the ⌘L shortcut), the local @FocusState syncs and the text field takes key focus.
     @Binding var requestFocus: Bool
-    @FocusState private var fieldFocused: Bool
 
     var body: some View {
         HStack(spacing: 8) {
-            // Monospaced prompt glyph — matches the console aesthetic.
             Text("brew")
                 .font(.system(size: 11, weight: .semibold, design: .monospaced))
                 .foregroundStyle(theme.accent)
                 .padding(.leading, 10)
 
-            // The input field. Uses a plain TextField bound to model.consoleInput.
-            // Key events for Up/Down history and Return submission are intercepted via
-            // .onKeyPress so they don't bubble to the panel's navigation shortcuts.
-            TextField("install, upgrade, info, search \u{2026}", text: $model.consoleInput)
-                .font(.system(size: 11, design: .monospaced))
-                .foregroundStyle(theme.text)
-                .textFieldStyle(.plain)
-                .focused($fieldFocused)
-                .disabled(!model.ready || model.busy)
-                .onChange(of: model.consoleInput) { _ in model.didTypeInConsoleInput() }
-                .onSubmit { model.runConsoleInput() }
-                .onKeyPress(.upArrow) { model.historyUp(); return .handled }
-                .onKeyPress(.downArrow) { model.historyDown(); return .handled }
-                .help("Type a brew command and press Return. Up/Down navigates history. \u{2318}L focuses this field.")
+            BrewConsoleTextField(
+                text: $model.consoleInput,
+                requestFocus: $requestFocus,
+                placeholder: "install, upgrade, info, search \u{2026}",
+                isEnabled: model.ready && !model.busy,
+                onSubmit: { model.runConsoleInput() },
+                onUp:     { model.historyUp() },
+                onDown:   { model.historyDown() },
+                onChange: { _ in model.didTypeInConsoleInput() },
+                font: NSFont.monospacedSystemFont(ofSize: 11, weight: .regular),
+                textColor: NSColor(theme.text)
+            )
+            .frame(maxWidth: .infinity)
+            .help("Type a brew command and press Return. \u{2191}\u{2193} navigates history. \u{2318}L focuses this field.")
 
-            // Clear the field with × when there's text.
             if !model.consoleInput.isEmpty {
                 Button {
                     model.consoleInput = ""
@@ -774,10 +855,7 @@ struct BrewInputBar: View {
                 .help("Clear input")
             }
 
-            // Run button — visible when the field has content and brew is idle.
-            Button {
-                model.runConsoleInput()
-            } label: {
+            Button { model.runConsoleInput() } label: {
                 Image(systemName: "return")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(model.consoleInput.isEmpty || model.busy || !model.ready
@@ -792,10 +870,5 @@ struct BrewInputBar: View {
         .background(theme.surface.opacity(0.6))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Brew command input. Type a brew command and press Return.")
-        // Sync focus from parent: when Dashboard sets requestFocus=true via ⌘L, forward it
-        // to the local @FocusState and immediately clear the flag so it's edge-triggered.
-        .onChange(of: requestFocus) { focused in
-            if focused { fieldFocused = true; requestFocus = false }
-        }
     }
 }
