@@ -65,6 +65,7 @@ enum KeyboardShortcuts {
         .init(id: "copy",       title: "Copy output",        key: .character("c"), modifiers: [.command, .shift],  display: "⌘⇧C", group: "Console"),
         .init(id: "clear",      title: "Clear console",      key: .backspace,      modifiers: .command,            display: "⌘⌫",  group: "Console"),
         .init(id: "stop",       title: "Stop command",       key: .character("."), modifiers: .command,            display: "⌘.",  group: "Console"),
+        .init(id: "focusinput", title: "Focus brew input",   key: .character("l"), modifiers: .command,            display: "⌘L",  group: "Console"),
 
         // Panel
         .init(id: "close",      title: "Close panel",        key: .character("w"), modifiers: .command,            display: "⌘W",  group: "Panel"),

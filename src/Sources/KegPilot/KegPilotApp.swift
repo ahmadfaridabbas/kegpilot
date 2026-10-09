@@ -121,6 +121,7 @@ struct Dashboard: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var model: BrewModel
+    @State private var inputFocusRequest = false
     private var statusColor: Color { model.busy ? .orange : (model.failed ? .red : .green) }
     private var theme: Theme { Theme.resolve(model.appearanceMode, systemIsDark: colorScheme == .dark) }
     private var appearanceIcon: String {
@@ -269,6 +270,8 @@ struct Dashboard: View {
                         .kegShortcut("check").disabled(model.busy || !model.ready)
                     Button("") { model.selectedTab = "Updates"; model.refreshDefinitions() }
                         .kegShortcut("refreshdef").disabled(model.busy || !model.ready)
+                    // Console input — focus the brew input bar.
+                    Button("") { inputFocusRequest = true }.kegShortcut("focusinput")
                 }.frame(width: 0, height: 0).opacity(0).accessibilityHidden(true)
             }
             if model.selectedTab == "Installed" {
@@ -400,6 +403,8 @@ struct Dashboard: View {
                     .accessibilityLabel("Restore from Brewfile \(restore.lastPathComponent). Install or Cancel.")
                     Divider()
                 }
+                BrewInputBar(model: model, theme: theme, requestFocus: $inputFocusRequest)
+                Divider()
                 HStack(spacing: 12) {
                     Button { model.copy() } label: { Label("Copy", systemImage: "doc.on.doc") }.disabled(model.output.isEmpty && model.downloads.isEmpty).kegShortcut("copy").help("Copy visible output · ⌘⇧C")
                     Button { model.clear() } label: { Label("Clear", systemImage: "trash") }.disabled(model.output.isEmpty).kegShortcut("clear").help("Clear console · ⌘⌫")
@@ -716,5 +721,81 @@ extension View {
     /// Removes the blue keyboard focus ring drawn around a `.segmented` picker's selected segment.
     func hideSegmentedFocusRing() -> some View {
         background(SegmentedFocusRingSuppressor().frame(width: 0, height: 0))
+    }
+}
+
+/// The brew command input bar shown at the bottom of the console, above the Copy/Clear toolbar.
+///
+/// Lets the user type any brew command (with or without the `brew` prefix) and submit it with
+/// Return. Up/Down arrow keys navigate history. ⌘L focuses the field from anywhere in the panel.
+/// Input is validated against a strict allowlist (alphanumerics + common brew flag chars) before
+/// any subprocess is spawned, so shell metacharacters can never reach the process environment.
+struct BrewInputBar: View {
+    @ObservedObject var model: BrewModel
+    let theme: Theme
+    /// Binding driven by the parent Dashboard's @FocusState. When the parent sets this true
+    /// (via the ⌘L shortcut), the local @FocusState syncs and the text field takes key focus.
+    @Binding var requestFocus: Bool
+    @FocusState private var fieldFocused: Bool
+
+    var body: some View {
+        HStack(spacing: 8) {
+            // Monospaced prompt glyph — matches the console aesthetic.
+            Text("brew")
+                .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                .foregroundStyle(theme.accent)
+                .padding(.leading, 10)
+
+            // The input field. Uses a plain TextField bound to model.consoleInput.
+            // Key events for Up/Down history and Return submission are intercepted via
+            // .onKeyPress so they don't bubble to the panel's navigation shortcuts.
+            TextField("install, upgrade, info, search \u{2026}", text: $model.consoleInput)
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundStyle(theme.text)
+                .textFieldStyle(.plain)
+                .focused($fieldFocused)
+                .disabled(!model.ready || model.busy)
+                .onChange(of: model.consoleInput) { _ in model.didTypeInConsoleInput() }
+                .onSubmit { model.runConsoleInput() }
+                .onKeyPress(.upArrow) { model.historyUp(); return .handled }
+                .onKeyPress(.downArrow) { model.historyDown(); return .handled }
+                .help("Type a brew command and press Return. Up/Down navigates history. \u{2318}L focuses this field.")
+
+            // Clear the field with × when there's text.
+            if !model.consoleInput.isEmpty {
+                Button {
+                    model.consoleInput = ""
+                    model.historyIndex = -1
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(theme.tertiaryText)
+                }
+                .buttonStyle(.plain)
+                .help("Clear input")
+            }
+
+            // Run button — visible when the field has content and brew is idle.
+            Button {
+                model.runConsoleInput()
+            } label: {
+                Image(systemName: "return")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(model.consoleInput.isEmpty || model.busy || !model.ready
+                                     ? theme.tertiaryText : theme.accent)
+            }
+            .buttonStyle(.plain)
+            .disabled(model.consoleInput.isEmpty || model.busy || !model.ready)
+            .padding(.trailing, 10)
+            .help("Run brew command \u{B7} Return")
+        }
+        .frame(height: 32)
+        .background(theme.surface.opacity(0.6))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Brew command input. Type a brew command and press Return.")
+        // Sync focus from parent: when Dashboard sets requestFocus=true via ⌘L, forward it
+        // to the local @FocusState and immediately clear the flag so it's edge-triggered.
+        .onChange(of: requestFocus) { focused in
+            if focused { fieldFocused = true; requestFocus = false }
+        }
     }
 }

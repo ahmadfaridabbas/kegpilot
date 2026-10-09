@@ -98,6 +98,20 @@ struct BrewAction: Identifiable {
     // Brewfile restore confirmation (Feature 4). Holds the chosen Brewfile URL awaiting the user's
     // confirmation before `brew bundle install` runs (mirrors the install/uninstall confirm pattern).
     @Published var brewfileRestoreCandidate: URL?
+    // MARK: - Console input bar
+    /// The text currently typed in the console input field (bound to the text field in the UI).
+    @Published var consoleInput = ""
+    /// History of commands typed via the input bar (oldest first). Persisted in UserDefaults so it
+    /// survives panel close/reopen, but not app quit (intentional — brew commands aren't shell history).
+    @Published var commandHistory: [String] = []
+    /// Index into `commandHistory` while the user is navigating with Up/Down (-1 = not navigating,
+    /// showing the live draft). Reset to -1 whenever the user types a character or submits.
+    var historyIndex = -1
+    /// The draft the user was typing before pressing Up — restored when they press Down past the end
+    /// of history so they don't lose what they started writing.
+    private var historyDraft = ""
+    // MARK: -
+
     @Published var follow = true
     @Published var output = ""
     @Published var status = "Preparing environment…"
@@ -742,6 +756,97 @@ struct BrewAction: Identifiable {
 
     /// Dismiss the recovery offer without acting (the user will handle it themselves).
     func dismissRecovery() { recovery = nil }
+
+    // MARK: - Console input bar
+
+    /// Submit the text currently in `consoleInput` as a brew command. The input is validated to
+    /// ensure it starts with "brew " (tolerating extra whitespace) and that no shell-dangerous
+    /// characters are present before the arguments are split and forwarded to `execute`. Commands
+    /// run exactly like buttons on the Maintenance tab -- same PTY, same environment, same output.
+    func runConsoleInput() {
+        let raw = consoleInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !raw.isEmpty, ready, !busy else { return }
+        // Normalise: strip a leading "brew " prefix if the user typed it, since execute() already
+        // invokes the brew binary. Accept bare subcommands ("upgrade", "install git") as well.
+        let stripped: String
+        if raw.lowercased().hasPrefix("brew ") {
+            stripped = String(raw.dropFirst(5)).trimmingCharacters(in: .whitespacesAndNewlines)
+        } else {
+            stripped = raw
+        }
+        guard !stripped.isEmpty else { return }
+        // Split on whitespace to produce the arguments array, then validate each token. We only
+        // allow characters brew itself accepts: alphanumerics, @, +, ., _, /, -, and leading --.
+        // Reject anything that looks like a shell metacharacter (;, |, &, $, `, etc.) so a
+        // copy-pasted shell pipeline can never escape into the process environment.
+        let parts = stripped.split(separator: " ").map(String.init)
+        let allowed = try! NSRegularExpression(pattern: "^(-{0,2}[A-Za-z0-9][A-Za-z0-9@+._/=-]*)$")
+        for part in parts {
+            let range = NSRange(part.startIndex..., in: part)
+            guard allowed.firstMatch(in: part, range: range) != nil else {
+                append("\r[KegPilot] Invalid characters in \"\(part)\". Only letters, numbers, and common brew flags are accepted.\n")
+                return
+            }
+        }
+        // Push to history (deduplicate: if the command is already the most-recent entry, don't
+        // add a duplicate). Keep at most 50 entries.
+        let fullInput = "brew " + stripped
+        if commandHistory.last != fullInput {
+            commandHistory.append(fullInput)
+            if commandHistory.count > 50 { commandHistory.removeFirst() }
+        }
+        historyIndex = -1
+        historyDraft = ""
+        consoleInput = ""
+        // Some brew subcommands mutate state that the app tracks; mark caches stale so the UI
+        // reflects the real state after the command finishes.
+        let verb = parts.first ?? ""
+        execute(arguments: parts) { [weak self] code, cancelled in
+            guard let self = self else { return }
+            // Any install/uninstall/upgrade/cleanup can change what's installed or outdated.
+            switch verb {
+            case "install", "reinstall", "uninstall", "zap", "upgrade", "cleanup", "autoremove":
+                self.inventoryStale = true
+                self.updatesStale = true
+            default:
+                break
+            }
+        }
+    }
+
+    /// Navigate UP through command history (older). Saves the current draft on the first press.
+    func historyUp() {
+        guard !commandHistory.isEmpty else { return }
+        if historyIndex == -1 {
+            historyDraft = consoleInput  // save live draft
+            historyIndex = commandHistory.count - 1
+        } else if historyIndex > 0 {
+            historyIndex -= 1
+        }
+        consoleInput = commandHistory[historyIndex]
+    }
+
+    /// Navigate DOWN through command history (newer). Restores the live draft past the end.
+    func historyDown() {
+        guard historyIndex != -1 else { return }
+        if historyIndex < commandHistory.count - 1 {
+            historyIndex += 1
+            consoleInput = commandHistory[historyIndex]
+        } else {
+            historyIndex = -1
+            consoleInput = historyDraft
+            historyDraft = ""
+        }
+    }
+
+    /// Called when the user types a character in the input field so history navigation resets and
+    /// the live draft is no longer stale.
+    func didTypeInConsoleInput() {
+        if historyIndex != -1 {
+            historyIndex = -1
+            historyDraft = ""
+        }
+    }
 
     /// Parse the just-flushed `text` line-by-line for brew's download markers and update the pinned
     /// live-download block (`downloads`). Homebrew's parallel queue reports several packages at once,
