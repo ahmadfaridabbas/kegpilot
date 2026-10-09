@@ -1,11 +1,14 @@
 # Cloudflare Workers Static Assets custom headers.
-# Replicates the cache policy previously set in netlify.toml.
 # Long-cache the immutable asset images and download zips; HTML/sitemap/robots
 # are left to Cloudflare's default revalidation so content changes (e.g. a new
 # release) are picked up quickly.
 
-/assets/*
-  Cache-Control: public, max-age=86400
+/assets/*.webp
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Type: image/webp
+
+/assets/*.png
+  Cache-Control: public, max-age=31536000, immutable
 
 /downloads/*
   Cache-Control: public, max-age=86400

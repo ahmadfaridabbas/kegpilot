@@ -10,7 +10,9 @@ for (const button of document.querySelectorAll('[data-view]')) {
   button.addEventListener('click', () => {
     const name = button.querySelector('strong').textContent;
     const view = button.dataset.view;
-    image.src = `assets/view-${view}.png`;
+    // Prefer WebP; browsers that loaded this script support it via <picture>.
+    const supportsWebP = document.createElement('canvas').toDataURL('image/webp').startsWith('data:image/webp');
+    image.src = supportsWebP ? `assets/view-${view}.webp` : `assets/view-${view}.png`;
     image.alt = viewAlt[view] || name;
     if (nameLabel) nameLabel.textContent = name;
     for (const item of document.querySelectorAll('[data-view]')) {
