@@ -1166,7 +1166,12 @@ struct BrewAction: Identifiable {
         var request = URLRequest(url: AppUpdate.latestReleaseAPI)
         request.timeoutInterval = 12
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
-        let current = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "2.3"
+        // Fallback is a sentinel, not a real version: a missing CFBundleShortVersionString never
+        // happens in a built bundle (build.sh always copies a plist that has it), and "0" keeps
+        // AppUpdate.isNewer parse-safe (components [0]) so any real release still reads as newer —
+        // failing toward "update available" rather than silently masking one. Avoids a hardcoded
+        // version literal that must be bumped every release (it had drifted to 2.3 at a 2.4.1 HEAD).
+        let current = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "0"
         // On a manual check, print the running build's details to the console so there's a visible
         // record of what's installed alongside the check result.
         if manual { logAppUpdateHeader(current: current) }

@@ -34,6 +34,15 @@ Create a release tagged `v2.4.1` and attach `docs/downloads/KegPilot-2.4.1.zip`.
 
 Edit the source in `src/`, run `./build.sh`, and regenerate the interface renders with `swift Design/RenderSite.swift ../../brewbar-site/docs/assets` (or your `docs/assets` path) if the appearance changes. For a version change, update `src/Info.plist`, the ZIP name/link in `docs/index.html` and `README.md`, and the visible version text. GitHub Pages republishes changes to `docs/` automatically once configured.
 
+Before tagging a release, run the pre-release gate from `src/`:
+
+```sh
+./release-check.sh            # auto-detects the version from Info.plist
+./release-check.sh 2.4.1      # or assert against an explicit version
+```
+
+It fails nonzero unless the tests pass, the version is consistent across `Info.plist`, `docs/index.html`, `README.md`, and `PUBLISHING.md` (with no stale ZIP links), the built app and the published ZIP both report that version and the ZIP contains `KegPilot.app`, and `SHA256SUMS.txt` has a matching entry for the exact asset. This codifies the manual checklist above and prevents the version-drift and lagging-checksum mistakes that a hand check can miss.
+
 KegPilot is not affiliated with Homebrew. Third-party status is documented in `THIRD_PARTY_NOTICES.md`.
 
 ## SEO

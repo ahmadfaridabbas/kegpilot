@@ -18,7 +18,9 @@ enum AppInfo {
     /// Marketing version (CFBundleShortVersionString), with build number when available.
     static var versionString: String {
         let info = Bundle.main.infoDictionary
-        let short = info?["CFBundleShortVersionString"] as? String ?? "2.3"
+        // Display-only sentinel; never shown for a real build (the plist always carries the key).
+        // Avoids a hardcoded version literal that would need bumping every release.
+        let short = info?["CFBundleShortVersionString"] as? String ?? "unknown"
         if let build = info?["CFBundleVersion"] as? String, !build.isEmpty {
             return "Version \(short) (\(build))"
         }

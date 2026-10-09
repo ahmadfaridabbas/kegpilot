@@ -10,5 +10,11 @@
 /assets/*.png
   Cache-Control: public, max-age=31536000, immutable
 
+# The checksum manifest must revalidate quickly: the in-app fail-closed updater
+# fetches it to verify a download, so a freshly published hash must not be hidden
+# behind the long download cache (a stale manifest would make a valid update abort).
+/downloads/SHA256SUMS.txt
+  Cache-Control: public, max-age=300, must-revalidate
+
 /downloads/*
   Cache-Control: public, max-age=86400

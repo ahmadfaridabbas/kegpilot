@@ -72,6 +72,12 @@ Gallery images are native offscreen renders of KegPilot's interface, produced fr
 
 This is a locally (ad-hoc) signed build, not Apple-notarized. The command above clears macOS's quarantine flag so the app opens cleanly; alternatively you can right-click → Open the first time or approve it in Privacy & Security. KegPilot requires an existing Homebrew installation at `/opt/homebrew`.
 
+### How updates are verified
+
+KegPilot's one-click self-update verifies the download before installing it, and **fails closed** — it aborts and leaves the installed app untouched unless it can compute the download's SHA-256, fetch `SHA256SUMS.txt`, find an entry for the exact asset, and match it ([`BrewModel.verifyAndInstall`](src/Sources/KegPilot/BrewModel.swift)).
+
+Be clear about what that does and does not guarantee. This is an **integrity** check, not an **authenticity** signature. It protects against a corrupted or tampered download in transit and against a swap of the release ZIP alone. It does **not** protect against a compromise of the publisher: the ZIP (GitHub Releases) and its checksum (`kegpilot.pages.dev`) are published by the same maintainer, so an attacker who controlled both could publish a matching pair. Because the build is ad-hoc signed and not Apple-notarized, there is no code-signing identity backing the download either. If you need a stronger guarantee, build from source in `src/` with `./build.sh` and verify the result yourself.
+
 ## Publishing
 
 See [PUBLISHING.md](PUBLISHING.md) for how the repository and website are structured and how to enable GitHub Pages.
