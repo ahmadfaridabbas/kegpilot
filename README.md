@@ -61,7 +61,7 @@ Gallery images are native offscreen renders of KegPilot's interface, produced fr
 
 ## Install
 
-1. Download and extract [KegPilot-2.3.zip](docs/downloads/KegPilot-2.3.zip).
+1. Download and extract [KegPilot-2.4.zip](docs/downloads/KegPilot-2.4.zip).
 2. Drag `KegPilot.app` to your Applications folder.
 3. Because KegPilot is open source and not notarized by Apple, macOS quarantines it on download. Run this once in Terminal to let it launch:
 

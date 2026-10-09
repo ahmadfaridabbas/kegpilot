@@ -1,1 +1,2 @@
 289b3c01cf6c22d8b846152fdfb6432ea812b72cea24e997843956a8233f61be  KegPilot-2.3.zip
+b9b0bcf670f41ccfd8a2dc48cbcefc8302cd5420dd48adaccaf2e4838b2f62e1  KegPilot-2.4.zip
