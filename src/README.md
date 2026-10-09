@@ -70,6 +70,10 @@ Suggested manual checks: open in both Light and Dark appearance; navigate action
 
 Official references: [Apple MenuBarExtra window style](https://developer.apple.com/documentation/swiftui/menubarextrastyle/window), [Homebrew command manual](https://docs.brew.sh/Manpage).
 
+## Version 2.4.2: Bundle identifier → com.kegpilot.app
+
+Identity change. The app bundle identifier moved from the legacy `com.brewbar.app` (retained through the 2.2 rebrand for compatibility) to **`com.kegpilot.app`**, matching the product name. Updated in `Info.plist` and both `KegPilot.xcodeproj` build configurations, with the About-header fallback and the askpass watch-queue label renamed to match. Because macOS keys preferences and privacy (TCC) permissions to the bundle identifier, this presents as a fresh app to the OS: the saved appearance theme resets and any previously granted permissions are requested again on first use. No migration shim is included (single-user project). No functional, Homebrew-command, or business-logic changes.
+
 ## Version 2.4.1: Mandatory update verification + console safeguards
 
 Security release. The in-app self-updater now **fails closed** on integrity verification. Previously `verifyAndInstall(zip:tag:)` would proceed to install when the `SHA256SUMS.txt` manifest couldn't be fetched, when it had no entry for the expected asset, or when the download's hash couldn't be computed — only an explicit hash *mismatch* aborted. Because the updater subsequently clears quarantine and swaps the app bundle in place, the checksum is the one integrity boundary guarding that replacement, so it must be mandatory rather than best-effort. The updater now aborts (leaving the installed app untouched) unless it computes the download's SHA-256, fetches the manifest (HTTP 200, decodable), finds an entry for the exact expected asset filename, and matches it.
@@ -342,7 +346,7 @@ A small follow-up to 1.26. When you choose **Options → Check for Updates…**,
 ```
 [time] Checking for KegPilot updates…
   Current version: 1.26.1 (build 29)
-  Bundle ID:       com.brewbar.app
+  Bundle ID:       com.kegpilot.app
   Location:        /Applications/KegPilot.app
   macOS:           Version 14.x …
   You're up to date — KegPilot 1.26.1 is the latest release.

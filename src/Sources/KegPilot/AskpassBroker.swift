@@ -35,7 +35,7 @@ final class AskpassBroker {
     /// Dedicated serial queue for the blocking request WATCHER only. The response writes use the
     /// global concurrent queue instead — the watcher parks for long stretches inside a blocking
     /// FIFO `open`, so sharing one serial queue would deadlock a `sendPassword` behind it.
-    private let watchQueue = DispatchQueue(label: "com.brewbar.askpass.watch", qos: .userInitiated)
+    private let watchQueue = DispatchQueue(label: "com.kegpilot.askpass.watch", qos: .userInitiated)
     private var watching = false
     private var finished = false
     /// The password the user supplied for THIS command, cached (under `lock`) so repeated sudo

@@ -1429,7 +1429,7 @@ struct BrewAction: Identifiable {
         guard !busy else { return }
         let info = Bundle.main.infoDictionary
         let build = info?["CFBundleVersion"] as? String ?? "?"
-        let identifier = info?["CFBundleIdentifier"] as? String ?? "com.brewbar.app"
+        let identifier = info?["CFBundleIdentifier"] as? String ?? "com.kegpilot.app"
         let os = ProcessInfo.processInfo.operatingSystemVersionString
         let bundlePath = Bundle.main.bundlePath
         let stamp = Date().formatted(date: .omitted, time: .standard)
