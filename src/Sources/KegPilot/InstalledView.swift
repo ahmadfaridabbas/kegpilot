@@ -8,10 +8,15 @@ struct InstalledView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 9) {
             // Mode toggle: browse what's installed, or search Homebrew and install something new.
-            Picker("Mode", selection: $model.installedTabMode) {
-                Text("Installed").tag("Installed")
-                Text("Search & Install").tag("Search")
-            }.pickerStyle(.segmented).labelsHidden().accessibilityLabel("Installed tab mode").hideSegmentedFocusRing()
+            SegmentedTabBar(
+                selection: $model.installedTabMode,
+                theme: theme,
+                tabs: [
+                    .init(tag: "Installed", title: "Installed"),
+                    .init(tag: "Search", title: "Search & Install"),
+                ]
+            )
+            .accessibilityLabel("Installed tab mode")
 
             if searchMode { searchModeView } else { installedModeView }
         }.frame(height: 300)
@@ -37,7 +42,10 @@ struct InstalledView: View {
                 Button { model.refreshInstalled() } label: { Image(systemName: "arrow.clockwise") }
                     .disabled(model.busy || !model.ready).help("Refresh installed packages")
                     .accessibilityLabel("Refresh installed packages")
-            }.padding(9).background(theme.field, in: RoundedRectangle(cornerRadius: 8))
+            }
+            .padding(.horizontal, 9)
+            .frame(height: 28)
+            .background(theme.field, in: RoundedRectangle(cornerRadius: 8))
             HStack {
                 Text("\(model.filteredPackages.count) packages · Homebrew only")
                 Spacer()
@@ -99,7 +107,10 @@ struct InstalledView: View {
                 Button { model.searchPackages(model.searchQuery) } label: { Image(systemName: "return") }
                     .disabled(model.busy || !model.ready).help("Search Homebrew")
                     .accessibilityLabel("Run search")
-            }.padding(9).background(theme.field, in: RoundedRectangle(cornerRadius: 8))
+            }
+            .padding(.horizontal, 9)
+            .frame(height: 28)
+            .background(theme.field, in: RoundedRectangle(cornerRadius: 8))
             HStack {
                 Text(model.searchResults.isEmpty ? "Search formulae and casks, then install" : "\(model.searchResults.count) result\(model.searchResults.count == 1 ? "" : "s")")
                 Spacer()

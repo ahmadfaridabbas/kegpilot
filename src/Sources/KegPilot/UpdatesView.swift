@@ -5,15 +5,27 @@ struct UpdatesView: View {
     @Environment(\.theme) private var theme
     var body: some View {
         VStack(alignment: .leading, spacing: 9) {
-            HStack {
-                TextField("Search updates", text: $model.updateSearch).textFieldStyle(.roundedBorder)
-                if !model.updateSearch.isEmpty {
-                    Button { model.updateSearch = "" } label: { Image(systemName: "xmark.circle.fill") }
-                        .buttonStyle(.plain).foregroundStyle(theme.secondaryText)
-                        .help("Clear search").accessibilityLabel("Clear search")
+            HStack(spacing: 8) {
+                HStack(spacing: 6) {
+                    Image(systemName: "magnifyingglass").foregroundStyle(theme.secondaryText)
+                    TextField("Search updates", text: $model.updateSearch).textFieldStyle(.plain)
+                        .foregroundStyle(theme.text)
+                        .accessibilityLabel("Search updates")
+                    if !model.updateSearch.isEmpty {
+                        Button { model.updateSearch = "" } label: { Image(systemName: "xmark.circle.fill") }
+                            .buttonStyle(.plain).foregroundStyle(theme.secondaryText)
+                            .help("Clear search").accessibilityLabel("Clear search")
+                    }
                 }
-                Button("Check") { model.checkUpdates() }.help("Check current Homebrew definitions · ⌘R")
-                Button("Refresh definitions") { model.refreshDefinitions() }.help("Fetch current definitions, then check for updates · ⌘⇧R")
+                .padding(.horizontal, 9)
+                .frame(height: 28)
+                .background(theme.field, in: RoundedRectangle(cornerRadius: 8))
+                Button("Check") { model.checkUpdates() }
+                    .frame(height: 28)
+                    .help("Check current Homebrew definitions · ⌘R")
+                Button("Refresh definitions") { model.refreshDefinitions() }
+                    .frame(height: 28)
+                    .help("Fetch current definitions, then check for updates · ⌘⇧R")
             }.disabled(model.busy || !model.ready)
             HStack {
                 Text("\(model.updates.count) available · \(model.updates.filter { $0.pinned }.count) pinned")

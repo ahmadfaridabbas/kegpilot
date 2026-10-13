@@ -238,11 +238,16 @@ struct Dashboard: View {
                 }.pickerStyle(.menu).fixedSize().labelsHidden()
                     .accessibilityLabel("App appearance")
             }
-            Picker("Section", selection: $model.selectedTab) {
-                Text("Maintenance").tag("Maintenance")
-                Text("Installed").tag("Installed")
-                Text(model.updatesLoaded ? "Updates (\(model.updates.count))" : "Updates").tag("Updates")
-            }.pickerStyle(.segmented).focusable(false).hideSegmentedFocusRing()
+            SegmentedTabBar(
+                selection: $model.selectedTab,
+                theme: theme,
+                tabs: [
+                    .init(tag: "Maintenance", title: "Maintenance"),
+                    .init(tag: "Installed", title: "Installed"),
+                    .init(tag: "Updates",
+                          title: model.updatesLoaded ? "Updates (\(model.updates.count))" : "Updates"),
+                ]
+            )
             .background {
                 // Invisible, always-mounted shortcut sinks. Because the per-tab buttons only exist
                 // while their tab is showing, their `.keyboardShortcut` is dead from other tabs.
@@ -275,50 +280,19 @@ struct Dashboard: View {
                     Button("") { model.focusInputRequest = true }.kegShortcut("focusinput")
                 }.frame(width: 0, height: 0).opacity(0).accessibilityHidden(true)
             }
-            if model.selectedTab == "Installed" {
-                InstalledView(model: model)
-            } else if model.selectedTab == "Updates" {
-                UpdatesView(model: model)
-            } else {
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                ForEach(BrewAction.all) { action in
-                    Button { model.run(action) } label: {
-                        HStack(alignment: .top, spacing: 10) {
-                            Image(systemName: action.icon).font(.system(size: 19)).foregroundStyle(theme.accent).frame(width: 25, height: 25)
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(action.title).font(.system(size: 14, weight: .semibold)).foregroundStyle(theme.text)
-                                Text(action.detail).font(.system(size: 11)).foregroundStyle(theme.secondaryText).fixedSize(horizontal: false, vertical: true)
-                                Text("brew \(action.command)").font(.system(size: 10, design: .monospaced)).foregroundStyle(theme.tertiaryText)
-                            }
-                            Spacer(minLength: 0)
-                        }.frame(maxWidth: .infinity, minHeight: 67, alignment: .leading).padding(11)
-                        .background(theme.surface, in: RoundedRectangle(cornerRadius: 12))
-                        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(theme.surfaceBorder))
-                        .contentShape(RoundedRectangle(cornerRadius: 12))
-                    }.buttonStyle(.plain).disabled(model.busy || !model.ready)
-                    .opacity(model.busy || !model.ready ? 0.55 : 1)
-                    .accessibilityLabel("\(action.title). \(action.detail). Run brew \(action.command)")
-                    .help("Run brew \(action.command) · \(KeyboardShortcuts.entry(action.command).display)")
+            ZStack(alignment: .top) {
+                if model.selectedTab == "Installed" {
+                    InstalledView(model: model)
+                        .transition(.opacity)
+                } else if model.selectedTab == "Updates" {
+                    UpdatesView(model: model)
+                        .transition(.opacity)
+                } else {
+                    maintenanceSection
+                        .transition(.opacity)
                 }
             }
-            HStack(spacing: 10) {
-                Image(systemName: "arrow.up.arrow.down.square").font(.system(size: 17)).foregroundStyle(theme.accent).frame(width: 25, height: 25)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Brewfile backup").font(.system(size: 13, weight: .semibold)).foregroundStyle(theme.text)
-                    Text("Save your setup, or restore it from a Brewfile.").font(.system(size: 10)).foregroundStyle(theme.secondaryText)
-                }
-                Spacer(minLength: 6)
-                Button("Export") { model.exportBrewfile() }
-                    .controlSize(.small).help("Save a Brewfile with brew bundle dump · ⌘E")
-                Button("Restore") { model.chooseBrewfileToRestore() }
-                    .controlSize(.small).help("Install from a Brewfile with brew bundle install · ⌘⇧B")
-            }.disabled(model.busy || !model.ready)
-            .padding(.horizontal, 11).padding(.vertical, 8)
-            .background(theme.surface, in: RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(theme.surfaceBorder))
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Brewfile backup. Export saves your setup; Restore installs from a Brewfile.")
-            }
+            .animation(.easeInOut(duration: 0.22), value: model.selectedTab)
             VStack(spacing: 0) {
                 HStack(spacing: 8) {
                     Image(systemName: "terminal").foregroundStyle(theme.text)
@@ -464,6 +438,51 @@ struct Dashboard: View {
         .environment(\.theme, theme)
         .tint(theme.accent)
         .onChange(of: colorScheme) { scheme in model.applyAppearance() }
+    }
+
+    /// The Maintenance tab's content (action grid + Brewfile backup row), factored out so the
+    /// tab switcher can transition it in/out as one unit.
+    @ViewBuilder private var maintenanceSection: some View {
+        VStack(spacing: 10) {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                ForEach(BrewAction.all) { action in
+                    Button { model.run(action) } label: {
+                        HStack(alignment: .top, spacing: 10) {
+                            Image(systemName: action.icon).font(.system(size: 19)).foregroundStyle(theme.accent).frame(width: 25, height: 25)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(action.title).font(.system(size: 14, weight: .semibold)).foregroundStyle(theme.text)
+                                Text(action.detail).font(.system(size: 11)).foregroundStyle(theme.secondaryText).fixedSize(horizontal: false, vertical: true)
+                                Text("brew \(action.command)").font(.system(size: 10, design: .monospaced)).foregroundStyle(theme.tertiaryText)
+                            }
+                            Spacer(minLength: 0)
+                        }.frame(maxWidth: .infinity, minHeight: 67, alignment: .leading).padding(11)
+                        .background(theme.surface, in: RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(theme.surfaceBorder))
+                        .contentShape(RoundedRectangle(cornerRadius: 12))
+                    }.buttonStyle(.plain).disabled(model.busy || !model.ready)
+                    .opacity(model.busy || !model.ready ? 0.55 : 1)
+                    .accessibilityLabel("\(action.title). \(action.detail). Run brew \(action.command)")
+                    .help("Run brew \(action.command) · \(KeyboardShortcuts.entry(action.command).display)")
+                }
+            }
+            HStack(spacing: 10) {
+                Image(systemName: "arrow.up.arrow.down.square").font(.system(size: 17)).foregroundStyle(theme.accent).frame(width: 25, height: 25)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Brewfile backup").font(.system(size: 13, weight: .semibold)).foregroundStyle(theme.text)
+                    Text("Save your setup, or restore it from a Brewfile.").font(.system(size: 10)).foregroundStyle(theme.secondaryText)
+                }
+                Spacer(minLength: 6)
+                Button("Export") { model.exportBrewfile() }
+                    .controlSize(.small).help("Save a Brewfile with brew bundle dump · ⌘E")
+                Button("Restore") { model.chooseBrewfileToRestore() }
+                    .controlSize(.small).help("Install from a Brewfile with brew bundle install · ⌘⇧B")
+            }.disabled(model.busy || !model.ready)
+            .padding(.horizontal, 11).padding(.vertical, 8)
+            .background(theme.surface, in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(theme.surfaceBorder))
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Brewfile backup. Export saves your setup; Restore installs from a Brewfile.")
+        }
     }
 
     /// The root surface: native modes keep the translucent material; Papery uses a solid paper
@@ -705,6 +724,78 @@ struct LiveDownloads: View {
         .padding(10)
         .background(theme.accent.opacity(0.08))
         .accessibilityElement(children: .contain)
+    }
+}
+
+
+/// A custom segmented tab bar styled after the reference "card" look: a recessed rounded
+/// track that holds the segments, with the selected segment drawn as a raised, lighter pill
+/// (subtle border + soft shadow) and the unselected ones as plain tappable labels.
+///
+/// Replaces the native `.segmented` `Picker` for the Maintenance/Installed/Updates sections so
+/// the tabs match the reference design across all five appearance themes (it derives its colors
+/// from the resolved `Theme` rather than hardcoding the dark palette from the screenshot).
+///
+/// Compatible with macOS 13+ (no `@State`; selection is bound to the model's `@Published` value).
+struct SegmentedTabBar: View {
+    struct Item: Identifiable {
+        let tag: String
+        let title: String
+        var id: String { tag }
+    }
+
+    @Binding var selection: String
+    let theme: Theme
+    let tabs: [Item]
+    @Namespace private var pill
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(tabs) { tab in
+                let isSelected = selection == tab.tag
+                Button {
+                    selection = tab.tag
+                } label: {
+                    Text(tab.title)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(isSelected ? theme.text : theme.secondaryText)
+                        .lineLimit(1)
+                        .fixedSize()
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background {
+                            if isSelected {
+                                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                    .fill(theme.surface)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                            .strokeBorder(theme.surfaceBorder)
+                                    )
+                                    .shadow(color: .black.opacity(0.14), radius: 1.5, x: 0, y: 1)
+                                    .matchedGeometryEffect(id: "selectedPill", in: pill)
+                            }
+                        }
+                        .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(tab.title)
+                .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
+                .help("Show \(tab.title)")
+            }
+        }
+        .padding(4)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(theme.field)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(theme.fieldBorder)
+                )
+        )
+        .animation(.spring(response: 0.32, dampingFraction: 0.86), value: selection)
+        .fixedSize()
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Section")
     }
 }
 

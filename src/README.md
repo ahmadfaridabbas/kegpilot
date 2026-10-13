@@ -70,6 +70,10 @@ Suggested manual checks: open in both Light and Dark appearance; navigate action
 
 Official references: [Apple MenuBarExtra window style](https://developer.apple.com/documentation/swiftui/menubarextrastyle/window), [Homebrew command manual](https://docs.brew.sh/Manpage).
 
+## Version 2.5: Tab UI refresh
+
+Interface release. The section tabs (**Maintenance / Installed / Updates**) and the Installed sub-toggle (**Installed / Search & Install**) are now a custom `SegmentedTabBar` styled after a recessed rounded track with a raised, lighter selected pill, replacing the native `.segmented` pickers. Switching tabs animates fluidly: the selected pill **slides** between segments via a `matchedGeometryEffect` spring, and the content area cross-fades. The pill and track colors derive from the resolved `Theme`, so the look adapts across all five appearances (System / Light / Dark / Papery Light / Papery Dark). The Updates search field was restyled to the themed field box used elsewhere (fixing a native-control black fill), and all search fields plus the Updates action row are aligned to a consistent height. No functional, Homebrew-command, or business-logic changes; all test suites pass and the built bundle reports version 2.5 (build 51).
+
 ## Version 2.4.2: Bundle identifier → com.kegpilot.app
 
 Identity change. The app bundle identifier moved from the legacy `com.brewbar.app` (retained through the 2.2 rebrand for compatibility) to **`com.kegpilot.app`**, matching the product name. Updated in `Info.plist` and both `KegPilot.xcodeproj` build configurations, with the About-header fallback and the askpass watch-queue label renamed to match. Because macOS keys preferences and privacy (TCC) permissions to the bundle identifier, this presents as a fresh app to the OS: the saved appearance theme resets and any previously granted permissions are requested again on first use. No migration shim is included (single-user project). No functional, Homebrew-command, or business-logic changes.
