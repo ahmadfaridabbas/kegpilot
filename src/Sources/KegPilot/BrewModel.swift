@@ -586,6 +586,12 @@ struct BrewAction: Identifiable {
         }
         detectPrompt()
         if !clean.isEmpty { detectDownload(in: clean) }
+        // Rebuild the live-download block from the terminal's *rendered grid* (not the flattened
+        // stream): the emulator has already collapsed brew's in-place redraws into a faithful,
+        // collision-free grid, so reading entries off it is robust to Homebrew 7's rolling-window
+        // concurrent-download UI. This is the authoritative source for the entries and their bytes;
+        // detectDownload above only handles block lifecycle + the percentage-only fallback.
+        syncDownloadsFromGrid()
     }
 
     /// Return how many of the first `upTo` bytes of `data` are safe to emit without cutting an ANSI
@@ -943,34 +949,33 @@ struct BrewAction: Identifiable {
         }
     }
 
-    /// Parse the just-flushed `text` line-by-line for brew's download markers and update the pinned
-    /// live-download block (`downloads`). Homebrew's parallel queue reports several packages at once,
-    /// so we key an entry per package name and rebuild the block from these entries — each row always
-    /// pairs the right name with the right bytes (no mismatch), and the block can't stack/garble
-    /// because we own it. A single unnamed download (percentage-only bar) is tracked as one entry.
+    /// Handle download *lifecycle + the percentage-only fallback* from the flushed stream. The named
+    /// multi-package entries and their byte counters now come from the terminal grid (see
+    /// `syncDownloadsFromGrid`), which is immune to Homebrew 7's overlapping concurrent-download
+    /// redraws. This path only:
+    ///   • starts/advances the single unnamed download that reports a bare `NN.N%` bar with no byte
+    ///     totals and no `Cask/Bottle <name>` row (brew still does this for a few plain downloads);
+    ///   • clears the whole block when brew moves on to a non-download step (`==> Pouring`, etc.) or
+    ///     a lone single download completes.
     /// Progress lines arrive `\r`-separated within a flush, so we split on both newlines and CRs.
     private func detectDownload(in text: String) {
         guard busy, !stopping else { return }
         for raw in text.split(whereSeparator: { $0 == "\n" || $0 == "\r" }) {
             switch DownloadProgressParser.parse(line: String(raw)) {
             case .start(let url, let fileName):
-                // Percentage-only path: a single named download with no byte totals yet.
+                // Percentage-only path: a single named download with no byte totals yet. Only used
+                // when the grid has no named rows for it; grid rows always win in the merge.
                 _ = url
                 singleDownloadName = fileName
-                upsert(name: fileName, received: 0, total: 0, fractionOverride: 0, done: false)
             case .progress(let fraction):
                 // Advance the single-download entry's percentage (ignored if no download started).
                 if let name = singleDownloadName {
                     upsert(name: name, received: 0, total: 0, fractionOverride: fraction, done: false)
                 }
-            case .bytes(let received, let total, let name, let complete):
-                // brew's parallel-queue byte counter — authoritative. Key by the reported name; when
-                // brew omits a name (rare), fall back to the single-download slot.
-                let key = name ?? singleDownloadName ?? "Downloading…"
-                if name != nil { singleDownloadName = nil }  // real parallel data supersedes the bar
-                upsert(name: key, received: received, total: total, fractionOverride: nil, done: complete)
-                // Option (b): if every tracked entry is now complete, commit the block to the log.
-                if !downloads.isEmpty && downloads.allSatisfy({ $0.done }) { commitDownloads() }
+            case .bytes:
+                // Named byte counters are now sourced from the rendered grid, which can't collide.
+                // Ignore the stream path for these (it mis-paired names/bytes under brew 7).
+                break
             case .finish:
                 // A non-download step (Installing/Pouring/…) or a completed single download: commit
                 // and clear the whole block so it doesn't linger into the install phase.
@@ -978,6 +983,49 @@ struct BrewAction: Identifiable {
             case .none:
                 break
             }
+        }
+    }
+
+    /// Rebuild the pinned live-download block from the terminal's *rendered grid*. The emulator has
+    /// already collapsed brew's in-place redraws into a faithful grid (one package per row), so this
+    /// reads brew's own live block directly — no name/bytes mismatch, no miscount, no feedback from
+    /// our own text, and it works identically across Homebrew versions and concurrency settings.
+    ///
+    /// Only the *tail* contiguous run of download rows is treated as the active block: brew redraws
+    /// the live block at the cursor (the bottom), while finished rows and later headings/pour lines
+    /// sit above it in permanent scrollback. Scanning bottom-up and stopping at the first
+    /// non-download line isolates the current block from any stale rows earlier in the session.
+    private func syncDownloadsFromGrid() {
+        guard busy, !stopping else { return }
+        let grid = output
+        // Collect the trailing contiguous block of brew download rows (bottom-up), then restore
+        // top-to-bottom order. Blank trailing lines (the emulator can leave an empty last row) are
+        // skipped so they don't prematurely break the run.
+        let lines = grid.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+        var tailRows: [DownloadRow] = []
+        var sawRow = false
+        for line in lines.reversed() {
+            if let row = DownloadGridParser.row(fromRenderedLine: line) {
+                tailRows.append(row); sawRow = true
+            } else if line.trimmingCharacters(in: .whitespaces).isEmpty && !sawRow {
+                continue   // skip trailing blank padding before the block
+            } else if sawRow {
+                break      // first non-download line above the block ends it
+            }
+        }
+        let gridRows = Array(tailRows.reversed())
+
+        // Merge the grid rows into `downloads`, preserving first-seen order. The grid is
+        // authoritative for named entries; the single-download percentage fallback (if any) is kept
+        // only when the grid shows nothing for it.
+        if gridRows.isEmpty {
+            // No named rows this frame. Keep any percentage-only single download the stream path is
+            // driving; otherwise leave the block as-is (a .finish clears it explicitly).
+            return
+        }
+        for row in gridRows {
+            if singleDownloadName == row.name { singleDownloadName = nil }  // grid supersedes the bar
+            upsert(name: row.name, received: row.received, total: row.total, fractionOverride: nil, done: row.done)
         }
     }
 
@@ -996,16 +1044,11 @@ struct BrewAction: Identifiable {
         }
     }
 
-    /// Finalize the live block: fold a text snapshot of the completed downloads into the scrollback
-    /// log (so Copy and history keep a record), then clear the pinned block.
+    /// Finalize the live block, then clear it. We no longer fold a text snapshot of the block back
+    /// into the console: brew's own download rows already live in the scrollback (via the terminal
+    /// emulator), and re-injecting our `· name — X/Y` snapshot used to collide with brew's still-live
+    /// redraw under Homebrew 7's concurrent UI — the exact source of the garbled/miscounted block.
     private func commitDownloads() {
-        guard !downloads.isEmpty else { clearDownload(); return }
-        var snapshot = ""
-        for entry in downloads {
-            let mark = entry.done ? "✓" : "·"
-            snapshot += "  \(mark) \(entry.name) — \(entry.byteSummary)\n"
-        }
-        append(snapshot)
         clearDownload()
     }
 

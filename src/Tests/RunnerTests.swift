@@ -190,6 +190,68 @@ import Darwin
         precondition(DownloadProgressParser.bytes(value: "2", unit: "GB") == Int64(2) * 1024 * 1024 * 1024)
         print("PASS: download progress parsing (start/advance/finish), file-name extraction, byte summary")
 
+        // DownloadGridParser: reads brew's live block off the terminal's RENDERED grid (one package
+        // per row), which is the fix for Homebrew 7's concurrent-download UI. Under brew 7 the old
+        // stream-flattening path collided (a 7-item `brew upgrade` showed only 4 rows, one of them an
+        // anonymous "Downloading…") because two progress renderings overlaid on one physical row.
+        // Reading the collapsed grid can't collide: each row carries its own name + bytes.
+        // A single in-progress bottle row.
+        guard let gr = DownloadGridParser.row(
+            fromRenderedLine: "⠋ Bottle awscli (2.39.2)                            Downloading  18.8MB/ 23.9MB")
+        else { preconditionFailure("in-progress bottle row should parse") }
+        precondition(gr.name == "awscli" && !gr.done, "bottle row name/done wrong: \(gr)")
+        precondition(gr.received == Int64((18.8 * 1024 * 1024).rounded()) && gr.total == Int64((23.9 * 1024 * 1024).rounded()))
+        // A completed cask row (✔︎ glyph + "Downloaded" phase) is marked done.
+        guard let gd = DownloadGridParser.row(
+            fromRenderedLine: "✔\u{FE0E} Cask slack (4.53.276)                     Downloaded  116.7MB/116.7MB")
+        else { preconditionFailure("completed cask row should parse") }
+        precondition(gd.name == "slack" && gd.done, "completed row should be done: \(gd)")
+        // Non-download lines yield nil (headings, pour lines, blanks, the bottle-manifest preamble).
+        precondition(DownloadGridParser.row(fromRenderedLine: "==> Pouring awscli--2.39.2.arm64.bottle.tar.gz") == nil)
+        precondition(DownloadGridParser.row(fromRenderedLine: "==> Fetching downloads for: simdjson, node@24") == nil)
+        precondition(DownloadGridParser.row(fromRenderedLine: "") == nil)
+        precondition(DownloadGridParser.row(fromRenderedLine: "🍺  /opt/homebrew/Cellar/simdjson/5.0.7: 19 files, 10.7MB") == nil)
+        // THE 7-ITEM REGRESSION, end to end through the real emulator. Feed a brew-7-style frame that
+        // draws all seven packages (3 bottles + 1 formula-ish + 3 casks), each its own row, redrawn
+        // in place (ESC[K per row, ESC[<n>F back to the top of the block). The grid parser must then
+        // recover all SEVEN rows with correct names — not 4, and no anonymous "Downloading…".
+        func dlrow(_ s: String) -> String { s + "\u{1B}[K" }
+        func sevenFrame(_ rows: [String]) -> String {
+            var f = "\u{1B}[?2026h"
+            for (i, r) in rows.enumerated() { f += dlrow(r) + (i < rows.count - 1 ? "\r\n" : "") }
+            f += "\u{1B}[\(rows.count - 1)F\u{1B}[?2026l"
+            return f
+        }
+        var seven = TerminalEmulator()
+        let rowsA = [
+            "⠋ Bottle simdjson (5.0.7)             #####          Downloading   1.0MB/  2.1MB",
+            "⠋ Bottle node@24 (24.22.2_1)         ####           Downloading   5.3MB/ 21.3MB",
+            "⠋ Bottle awscli (2.39.2)             ####           Downloading  18.8MB/ 23.9MB",
+            "⠋ Bottle mole (1.66.0)               ##             Downloading   1.1MB/  4.2MB",
+            "⠋ Cask google-chrome (156.0.8078.80) #              Downloading  67.7MB/279.0MB",
+            "⠋ Cask kiro-cli (2.36.0)             ###            Downloading 107.4MB/372.8MB",
+            "⠋ Cask slack (4.53.276)              ########       Downloading  90.0MB/116.7MB",
+        ]
+        seven.feed(sevenFrame(rowsA))
+        let gridRows = DownloadGridParser.rows(fromRenderedGrid: seven.render())
+        precondition(gridRows.count == 7, "brew-7 7-item block must recover 7 rows, got \(gridRows.count): \(seven.render())")
+        let names = gridRows.map(\.name)
+        precondition(names == ["simdjson", "node@24", "awscli", "mole", "google-chrome", "kiro-cli", "slack"],
+                     "grid rows must carry the right names in order: \(names)")
+        precondition(!names.contains("Downloading…") && !names.contains("Downloading\u{2026}"),
+                     "no anonymous row should appear: \(names)")
+        // A second frame rewrites the same block in place; the parser still reports exactly 7 rows
+        // with the advanced bytes (no stacking, no stale duplicates).
+        var rowsB = rowsA
+        rowsB[4] = "✔\u{FE0E} Cask google-chrome (156.0.8078.80)             Downloaded 279.0MB/279.0MB"
+        seven.feed(sevenFrame(rowsB))
+        let gridRows2 = DownloadGridParser.rows(fromRenderedGrid: seven.render())
+        precondition(gridRows2.count == 7, "second frame must still be 7 rows, got \(gridRows2.count): \(seven.render())")
+        let chromeRow = gridRows2.first { $0.name == "google-chrome" }!
+        precondition(chromeRow.done && chromeRow.received == chromeRow.total, "chrome should now be complete: \(chromeRow)")
+        print("PASS: download grid parser (brew-7 7-item block, per-row names, in-place redraw, completion)")
+
+
         // TerminalEmulator: brew's live redraw must collapse onto one block, matching a real terminal.
         // Control sequences used (verified against Homebrew download_queue.rb / utils/tty.rb):
         //   ESC[0G  move to column 0        ESC[<n>F  cursor up n rows + column 0

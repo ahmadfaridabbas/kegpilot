@@ -82,6 +82,83 @@ struct DownloadEntry: Identifiable, Equatable {
     var percentText: String { "\(Int((fraction * 100).rounded()))%" }
 }
 
+/// One parsed download status row read from the terminal's *rendered grid* (not the raw byte
+/// stream). Homebrew's parallel download queue draws exactly one package per screen row and rewrites
+/// that block in place every frame, so the rendered grid is the collision-free source of truth —
+/// each row pairs one package name with its own byte counter. `DownloadGridParser` turns a rendered
+/// row into one of these; `BrewModel` rebuilds the live block from the current grid each flush.
+struct DownloadRow: Equatable {
+    let name: String
+    let received: Int64
+    let total: Int64
+    /// True when brew reports the row complete (`✔︎`/`✓` glyph, "Downloaded" phase, or received ≥ total).
+    let done: Bool
+}
+
+/// Extracts download status rows from the terminal's *rendered grid*. This replaces the old approach
+/// of parsing a separately-flattened copy of brew's raw byte stream, which collided badly under
+/// Homebrew 7's rewritten concurrent-download UI (a rolling fixed-height window redrawn with
+/// cursor-up + clear-to-end-of-screen, where two progress renderings could overlay on one physical
+/// row). The TerminalEmulator already collapses brew's in-place redraws into a faithful grid exactly
+/// like Terminal.app, so reading entries off that grid is immune to the overlay/feedback artifacts
+/// and works the same across brew versions and concurrency settings. Pure/testable (no AppKit, no
+/// model state).
+enum DownloadGridParser {
+    /// Homebrew's per-item status line: `<glyph> <Cask|Bottle|Formula> <name> (<ver>) <bar> <Phase>
+    /// <fetched>/<total>` — e.g. `✔︎ Bottle simdjson (5.0.7)  Downloaded  2.1MB/ 2.1MB` or
+    /// `⠋ Cask google-chrome (156.0.8078.80) ###  Downloading 67.7MB/279.0MB`. We anchor on the
+    /// `Cask|Bottle|Formula <name>` kind+name and the trailing `Download(ing|ed) X/Y` byte counter,
+    /// so leading spinner/check glyphs, the progress bar, and inter-column padding are all tolerated.
+    private static let rowRegex = try! NSRegularExpression(
+        pattern: #"(?:Cask|Bottle|Formula)\s+([A-Za-z0-9@._+-]+)\b.*?Download(ing|ed)\s+([\d.]+)\s*([KMGT]?B)\s*/\s*([\d.]+)\s*([KMGT]?B)"#,
+        options: [.caseInsensitive])
+
+    /// Parse one rendered grid row. Returns nil for any line that isn't a brew download status row
+    /// (headings, pour lines, blank padding, etc.). A row counts as done when brew's completion glyph
+    /// (`✔︎`/`✓`) leads it, the phase word is `Downloaded`, or the byte counter has reached the total.
+    static func row(fromRenderedLine rawLine: String) -> DownloadRow? {
+        let line = rawLine.trimmingCharacters(in: .whitespaces)
+        guard !line.isEmpty else { return nil }
+        let ns = line as NSString
+        guard let m = rowRegex.firstMatch(in: line, range: NSRange(location: 0, length: ns.length)) else {
+            return nil
+        }
+        let name = ns.substring(with: m.range(at: 1)).trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty else { return nil }
+        let phase = ns.substring(with: m.range(at: 2))   // "ing" or "ed"
+        guard let received = DownloadProgressParser.bytes(value: ns.substring(with: m.range(at: 3)),
+                                                          unit: ns.substring(with: m.range(at: 4))),
+              let total = DownloadProgressParser.bytes(value: ns.substring(with: m.range(at: 5)),
+                                                       unit: ns.substring(with: m.range(at: 6))),
+              total > 0 else { return nil }
+        // The leading status glyph brew draws: ✔︎ / ✓ (done) · ✘ (failed) · spinner (in progress).
+        let hasDoneGlyph = line.hasPrefix("✔") || line.hasPrefix("✓")
+        let done = hasDoneGlyph || phase.lowercased() == "ed" || received >= total
+        // Guard against a transient row where the reported received briefly exceeds total.
+        let cappedTotal = max(total, received)
+        return DownloadRow(name: name, received: received, total: cappedTotal, done: done)
+    }
+
+    /// Scan a whole rendered grid (the emulator's `render()` output, newline-separated) and return
+    /// one `DownloadRow` per package currently shown in brew's live block, in top-to-bottom order.
+    /// Duplicate names (a package that still has a stale finished row above a live one, which brew's
+    /// redraw shouldn't produce but we guard against) collapse to the last occurrence.
+    static func rows(fromRenderedGrid grid: String) -> [DownloadRow] {
+        var seen: [String: Int] = [:]
+        var rows: [DownloadRow] = []
+        for rawLine in grid.split(separator: "\n", omittingEmptySubsequences: false) {
+            guard let parsed = row(fromRenderedLine: String(rawLine)) else { continue }
+            if let idx = seen[parsed.name] {
+                rows[idx] = parsed
+            } else {
+                seen[parsed.name] = rows.count
+                rows.append(parsed)
+            }
+        }
+        return rows
+    }
+}
+
 /// Pure parser that turns a single console line into a progress update. Kept free of AppKit and of
 /// BrewModel state so it is trivially unit-testable. The model calls `parse(line:)` for every line
 /// it appends and applies the returned action.
