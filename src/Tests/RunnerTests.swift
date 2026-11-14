@@ -387,6 +387,10 @@ import Darwin
         precondition(AppUpdate.tagName(fromLatestReleaseJSON: relJSON) == "v1.26")
         precondition(AppUpdate.displayVersion(fromTag: "v1.26") == "1.26")
         precondition(AppUpdate.tagName(fromLatestReleaseJSON: Data("{}".utf8)) == nil, "missing tag → nil")
+        // Rate-limit fallback: the tag comes from the /releases/latest redirect target.
+        precondition(AppUpdate.tag(fromReleasePageURL: URL(string: "https://github.com/o/r/releases/tag/v2.7")) == "v2.7")
+        precondition(AppUpdate.tag(fromReleasePageURL: URL(string: "https://github.com/o/r/releases")) == nil, "no tag → nil")
+        precondition(AppUpdate.tag(fromReleasePageURL: nil) == nil)
         // Phase 2: checksum parsing + asset URL extraction + asset filename.
         let sums = AppUpdate.parseChecksums("abc123\n" + String(repeating: "a", count: 64) + "  KegPilot-1.27.zip\n")
         precondition(sums["KegPilot-1.27.zip"] == String(repeating: "a", count: 64), "checksum line should parse")

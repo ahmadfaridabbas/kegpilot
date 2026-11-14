@@ -63,6 +63,16 @@ enum AppUpdate {
         return tag
     }
 
+    /// Extract the tag from a release page URL such as `https://github.com/<repo>/releases/tag/v2.7`
+    /// (what `/releases/latest` redirects to). Returns nil for any other URL, e.g. when the repo
+    /// has no releases and the redirect target is the plain releases list.
+    static func tag(fromReleasePageURL url: URL?) -> String? {
+        guard let parts = url?.pathComponents, parts.count >= 2,
+              parts[parts.count - 2] == "tag" else { return nil }
+        let tag = parts[parts.count - 1]
+        return versionComponents(tag).isEmpty ? nil : tag
+    }
+
     /// A display version (no leading `v`) for a tag, e.g. `v1.26` → `1.26`.
     static func displayVersion(fromTag tag: String) -> String {
         var s = tag.trimmingCharacters(in: .whitespaces)

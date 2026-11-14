@@ -70,6 +70,10 @@ Suggested manual checks: open in both Light and Dark appearance; navigate action
 
 Official references: [Apple MenuBarExtra window style](https://developer.apple.com/documentation/swiftui/menubarextrastyle/window), [Homebrew command manual](https://docs.brew.sh/Manpage).
 
+## Version 2.7.1: Update check no longer fails when GitHub's API is rate-limited
+
+Bug-fix release. The in-app update check queried only `api.github.com`, which allows 60 unauthenticated requests per hour per IP. On shared or busy networks it answered 403, and the app reported "Could not reach GitHub Releases". When the API call fails, the check now reads the latest tag from the redirect of `github.com/<repo>/releases/latest`, which has no such limit, and builds the download link from that tag. No other changes.
+
 ## Version 2.7: More Maintenance actions
 
 The Maintenance tab gains six tiles: **Search** (`brew search <text>`), **Info** (`brew info <formula>`), **Leaves** (`brew leaves`), **Services** (`brew services list`), **Bundle** (`brew bundle dump`, via the Brewfile save panel) and **Pin** (`brew pin <formula>`). Search, Info and Pin need an argument, so they pre-fill the console input and focus it; Pin still goes through the destructive-command confirmation card. The action grid now scrolls inside a fixed-height box, so the panel stays the same size. No changes to existing commands.

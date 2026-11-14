@@ -1266,41 +1266,72 @@ struct BrewAction: Identifiable {
             Task { @MainActor in
                 guard let self = self else { return }
                 self.appUpdateTask = nil
+                if let data = data, error == nil,
+                   (response as? HTTPURLResponse)?.statusCode == 200,
+                   let tag = AppUpdate.tagName(fromLatestReleaseJSON: data) {
+                    self.finishAppUpdateCheck(tag: tag, zipURL: AppUpdate.zipAssetURL(fromLatestReleaseJSON: data),
+                                              current: current, manual: manual)
+                } else {
+                    // The unauthenticated API allows only 60 requests/hour per IP, so on shared or
+                    // busy networks it answers 403/429. Fall back to the public release page, whose
+                    // redirect names the latest tag and isn't subject to that limit.
+                    self.checkLatestViaReleasePage(current: current, manual: manual)
+                }
+            }
+        }
+        appUpdateTask = task
+        task.resume()
+    }
+
+    /// Fallback for `checkForAppUpdate`: resolve the latest tag from the redirect of
+    /// `github.com/<repo>/releases/latest` (→ `.../releases/tag/<tag>`), with no API rate limit.
+    private func checkLatestViaReleasePage(current: String, manual: Bool) {
+        var request = URLRequest(url: AppUpdate.latestReleasePage)
+        request.httpMethod = "HEAD"
+        request.timeoutInterval = 12
+        let task = URLSession.shared.dataTask(with: request) { [weak self] _, response, error in
+            Task { @MainActor in
+                guard let self = self else { return }
+                self.appUpdateTask = nil
                 self.checkingAppUpdate = false
-                guard let data = data, error == nil,
-                      (response as? HTTPURLResponse)?.statusCode == 200,
-                      let tag = AppUpdate.tagName(fromLatestReleaseJSON: data) else {
+                guard error == nil, (response as? HTTPURLResponse)?.statusCode == 200,
+                      let tag = AppUpdate.tag(fromReleasePageURL: response?.url) else {
                     if manual {
                         self.appUpdateStatus = "Couldn't check for updates. Try again later."
                         self.logAppUpdate("Could not reach GitHub Releases. Check your connection and try again.")
                     }
                     return
                 }
-                let latest = AppUpdate.displayVersion(fromTag: tag)
-                if AppUpdate.isNewer(tag, than: current) {
-                    self.appUpdateAvailable = true
-                    self.latestAppVersion = latest
-                    self.pendingUpdateTag = tag
-                    self.pendingUpdateURL = AppUpdate.zipAssetURL(fromLatestReleaseJSON: data)
-                        ?? AppUpdate.fallbackZipURL(tag: tag)
-                    if manual {
-                        self.appUpdateStatus = "KegPilot \(latest) is available."
-                        self.logAppUpdate("Update available: KegPilot \(latest) (latest release \(tag)). Use “Update to \(latest)” to download and install it automatically.")
-                    }
-                } else {
-                    self.appUpdateAvailable = false
-                    self.latestAppVersion = nil
-                    self.pendingUpdateTag = nil
-                    self.pendingUpdateURL = nil
-                    if manual {
-                        self.appUpdateStatus = "You're up to date."
-                        self.logAppUpdate("You're up to date — KegPilot \(current) is the latest release.")
-                    }
-                }
+                self.finishAppUpdateCheck(tag: tag, zipURL: nil, current: current, manual: manual)
             }
         }
         appUpdateTask = task
         task.resume()
+    }
+
+    /// Apply a resolved latest-release tag: flag/clear "update available" and log for manual checks.
+    private func finishAppUpdateCheck(tag: String, zipURL: URL?, current: String, manual: Bool) {
+        checkingAppUpdate = false
+        let latest = AppUpdate.displayVersion(fromTag: tag)
+        if AppUpdate.isNewer(tag, than: current) {
+            appUpdateAvailable = true
+            latestAppVersion = latest
+            pendingUpdateTag = tag
+            pendingUpdateURL = zipURL ?? AppUpdate.fallbackZipURL(tag: tag)
+            if manual {
+                appUpdateStatus = "KegPilot \(latest) is available."
+                logAppUpdate("Update available: KegPilot \(latest) (latest release \(tag)). Use “Update to \(latest)” to download and install it automatically.")
+            }
+        } else {
+            appUpdateAvailable = false
+            latestAppVersion = nil
+            pendingUpdateTag = nil
+            pendingUpdateURL = nil
+            if manual {
+                appUpdateStatus = "You're up to date."
+                logAppUpdate("You're up to date — KegPilot \(current) is the latest release.")
+            }
+        }
     }
 
     /// Open the GitHub release page so the user can download the new version (fallback / "release

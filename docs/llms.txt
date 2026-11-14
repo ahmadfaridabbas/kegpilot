@@ -16,7 +16,7 @@ KegPilot is a native SwiftUI menu-bar app for Homebrew on macOS. It runs the `br
 
 - Created by: Ahmad Farid Abbas
 - License: MIT
-- Current version: 2.7
+- Current version: 2.7.1
 - Platform: macOS 13 Ventura or later, Apple Silicon
 - Requires: an existing Homebrew installation at /opt/homebrew
 
