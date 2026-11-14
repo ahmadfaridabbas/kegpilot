@@ -70,6 +70,10 @@ Suggested manual checks: open in both Light and Dark appearance; navigate action
 
 Official references: [Apple MenuBarExtra window style](https://developer.apple.com/documentation/swiftui/menubarextrastyle/window), [Homebrew command manual](https://docs.brew.sh/Manpage).
 
+## Version 2.7: More Maintenance actions
+
+The Maintenance tab gains six tiles: **Search** (`brew search <text>`), **Info** (`brew info <formula>`), **Leaves** (`brew leaves`), **Services** (`brew services list`), **Bundle** (`brew bundle dump`, via the Brewfile save panel) and **Pin** (`brew pin <formula>`). Search, Info and Pin need an argument, so they pre-fill the console input and focus it; Pin still goes through the destructive-command confirmation card. The action grid now scrolls inside a fixed-height box, so the panel stays the same size. No changes to existing commands.
+
 ## Version 2.6: Homebrew 7 download-progress fix
 
 Bug-fix release. The console's **live download block** was miscounting and mislabeling packages under **Homebrew 7's rewritten concurrent-download UI** — a 7-package `brew upgrade` showed only four rows, one of them an anonymous "Downloading…". Root cause: the download tracker parsed a separately-flattened copy of brew's raw byte stream, which collides under brew 7's rolling fixed-height window (redrawn in place with cursor-up + clear-to-end-of-screen), where two progress renderings can overlay on one physical row; KegPilot's own committed `· name — X/Y` snapshot was also being re-injected into the console and colliding with brew's still-live block.
