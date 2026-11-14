@@ -3,18 +3,47 @@ import SwiftUI
 import CryptoKit
 
 struct BrewAction: Identifiable {
+    /// How a tile behaves when clicked.
+    enum Kind {
+        /// Runs `brew <arguments>` immediately.
+        case run
+        /// Needs an argument (a formula or search text): pre-fills the console input with
+        /// `<command> ` and focuses it. Submitting goes through the console's validation and
+        /// destructive-command confirmation, so e.g. `pin` still asks before running.
+        case prompt
+        /// Opens the Brewfile save panel (`brew bundle dump`), same as the Export button.
+        case export
+    }
     let command: String
     let title: String
     let detail: String
     let icon: String
+    /// The exact argv passed to brew for `.run` tiles. Defaults to `[command]`.
+    var arguments: [String]? = nil
+    /// The command text shown on the tile. Defaults to `brew <command>`.
+    var label: String? = nil
+    var kind: Kind = .run
     var id: String { command }
+    var argv: [String] { arguments ?? [command] }
+    var commandLabel: String { label ?? "brew \(command)" }
     static let all: [BrewAction] = [
         .init(command: "update", title: "Update", detail: "Refresh Homebrew & package definitions", icon: "arrow.triangle.2.circlepath"),
         .init(command: "outdated", title: "Outdated", detail: "Find packages with newer versions", icon: "magnifyingglass"),
         .init(command: "upgrade", title: "Upgrade", detail: "Install available package upgrades", icon: "arrow.up.circle"),
         .init(command: "cleanup", title: "Cleanup", detail: "Remove old versions & stale downloads", icon: "sparkles"),
         .init(command: "autoremove", title: "Autoremove", detail: "Uninstall unneeded dependencies", icon: "shippingbox"),
-        .init(command: "doctor", title: "Doctor", detail: "Check configuration & system health", icon: "stethoscope")
+        .init(command: "doctor", title: "Doctor", detail: "Check configuration & system health", icon: "stethoscope"),
+        .init(command: "search", title: "Search", detail: "Find formulae and casks by name", icon: "text.magnifyingglass",
+              label: "brew search <text>", kind: .prompt),
+        .init(command: "info", title: "Info", detail: "Show version, dependencies & caveats", icon: "info.circle",
+              label: "brew info <formula>", kind: .prompt),
+        .init(command: "leaves", title: "Leaves", detail: "List packages you installed directly", icon: "leaf"),
+        .init(command: "services", title: "Services", detail: "Start, stop & restart background daemons", icon: "server.rack",
+              arguments: ["services", "list"], label: "brew services list"),
+        .init(command: "bundle", title: "Bundle", detail: "Back up installs to a Brewfile", icon: "arrow.down.doc",
+              label: "brew bundle dump", kind: .export),
+        .init(command: "pin", title: "Pin", detail: "Hold a package at its current version", icon: "pin",
+              label: "brew pin <formula>", kind: .prompt)
     ]
 }
 
@@ -239,8 +268,23 @@ struct BrewAction: Identifiable {
         }
     }
 
+    /// Handle a Maintenance tile click: run it, pre-fill the console for tiles that need an
+    /// argument, or open the Brewfile export panel.
+    func perform(_ action: BrewAction) {
+        switch action.kind {
+        case .run:
+            run(action)
+        case .prompt:
+            guard ready, !busy else { return }
+            consoleInput = action.command + " "
+            focusInputRequest = true
+        case .export:
+            exportBrewfile()
+        }
+    }
+
     func run(_ action: BrewAction) {
-        execute(arguments: [action.command]) { [weak self] code, cancelled in
+        execute(arguments: action.argv) { [weak self] code, cancelled in
             guard let self = self else { return }
             self.inventoryStale = true; self.updatesStale = true
         }

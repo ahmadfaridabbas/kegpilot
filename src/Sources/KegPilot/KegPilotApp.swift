@@ -261,8 +261,8 @@ struct Dashboard: View {
                     Button("") { model.selectedTab = "Installed" }.kegShortcut("tab2")
                     Button("") { model.selectedTab = "Updates" }.kegShortcut("tab3")
                     // Maintenance actions — jump to Maintenance, then run the brew command.
-                    ForEach(BrewAction.all) { action in
-                        Button("") { model.selectedTab = "Maintenance"; model.run(action) }
+                    ForEach(BrewAction.all.filter { KeyboardShortcuts.find($0.command) != nil }) { action in
+                        Button("") { model.selectedTab = "Maintenance"; model.perform(action) }
                             .kegShortcut(action.command)
                             .disabled(model.busy || !model.ready)
                     }
@@ -444,27 +444,32 @@ struct Dashboard: View {
     /// tab switcher can transition it in/out as one unit.
     @ViewBuilder private var maintenanceSection: some View {
         VStack(spacing: 10) {
+            ScrollView(.vertical, showsIndicators: true) {
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                 ForEach(BrewAction.all) { action in
-                    Button { model.run(action) } label: {
+                    Button { model.perform(action) } label: {
                         HStack(alignment: .top, spacing: 10) {
                             Image(systemName: action.icon).font(.system(size: 19)).foregroundStyle(theme.accent).frame(width: 25, height: 25)
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(action.title).font(.system(size: 14, weight: .semibold)).foregroundStyle(theme.text)
                                 Text(action.detail).font(.system(size: 11)).foregroundStyle(theme.secondaryText).fixedSize(horizontal: false, vertical: true)
-                                Text("brew \(action.command)").font(.system(size: 10, design: .monospaced)).foregroundStyle(theme.tertiaryText)
+                                Text(action.commandLabel).font(.system(size: 10, design: .monospaced)).foregroundStyle(theme.tertiaryText)
                             }
                             Spacer(minLength: 0)
-                        }.frame(maxWidth: .infinity, minHeight: 67, alignment: .leading).padding(11)
+                        }.frame(maxWidth: .infinity, minHeight: 67, maxHeight: 67, alignment: .topLeading).padding(11)
                         .background(theme.surface, in: RoundedRectangle(cornerRadius: 12))
                         .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(theme.surfaceBorder))
                         .contentShape(RoundedRectangle(cornerRadius: 12))
                     }.buttonStyle(.plain).disabled(model.busy || !model.ready)
                     .opacity(model.busy || !model.ready ? 0.55 : 1)
-                    .accessibilityLabel("\(action.title). \(action.detail). Run brew \(action.command)")
-                    .help("Run brew \(action.command) · \(KeyboardShortcuts.entry(action.command).display)")
+                    .accessibilityLabel("\(action.title). \(action.detail). \(action.kind == .prompt ? "Type the argument in the console" : "Run") \(action.commandLabel)")
+                    .help("\(action.commandLabel)" + (KeyboardShortcuts.find(action.command).map { " · \($0.display)" } ?? ""))
                 }
             }
+            }
+            // Same height as the original three rows of two tiles (3 × 89 + 2 × 10), so adding more
+            // actions scrolls inside this box instead of growing the panel.
+            .frame(height: 287)
             HStack(spacing: 10) {
                 Image(systemName: "arrow.up.arrow.down.square").font(.system(size: 17)).foregroundStyle(theme.accent).frame(width: 25, height: 25)
                 VStack(alignment: .leading, spacing: 2) {
@@ -899,6 +904,8 @@ struct BrewConsoleTextField: NSViewRepresentable {
         if requestFocus {
             DispatchQueue.main.async {
                 field.window?.makeFirstResponder(field)
+                // Park the caret after any pre-filled text (e.g. "search ") instead of selecting it.
+                field.currentEditor()?.selectedRange = NSRange(location: (field.stringValue as NSString).length, length: 0)
                 self.requestFocus = false
             }
         }

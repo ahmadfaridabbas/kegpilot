@@ -95,10 +95,10 @@ enum BrandImages { static func icon(dark: Bool) -> NSImage { NSImage(size: NSSiz
         precondition(!model.searchResults.first { $0.token == "iterm2" }!.installed)  // concurrent install was ignored
         print("PASS: install selection/guard, typed install arguments, concurrency, installed-state update")
 
-        for action in BrewAction.all {
+        for action in BrewAction.all where action.kind == .run {
             model.run(action)
             pump { !model.busy }
-            precondition(model.command == "brew " + action.command)
+            precondition(model.command == "brew " + action.argv.joined(separator: " "))
             precondition(model.output.components(separatedBy: "$ brew ").count == 2, "Unexpected follow-up command")
             precondition(!model.output.contains("\n\n\n"), "Excess blank lines")
         }

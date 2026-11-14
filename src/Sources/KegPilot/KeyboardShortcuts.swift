@@ -72,6 +72,9 @@ enum KeyboardShortcuts {
         .init(id: "quit",       title: "Quit KegPilot",      key: .character("q"), modifiers: .command,            display: "⌘Q",  group: "Panel"),
     ]
 
+    /// Optional lookup for ids that may have no shortcut (e.g. the newer Maintenance tiles).
+    static func find(_ id: String) -> ShortcutEntry? { all.first(where: { $0.id == id }) }
+
     /// Look up one entry by id so the live buttons can declare `.keyboardShortcut` from the catalog.
     static func entry(_ id: String) -> ShortcutEntry {
         guard let found = all.first(where: { $0.id == id }) else {
